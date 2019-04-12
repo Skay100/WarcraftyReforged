@@ -1,0 +1,11 @@
+## Interface: 30300
+## Title: Warcrafty
+## Notes: Unit Frames
+## Version: 3.3.0
+## Author: Deep
+## DefaultState: Enabled
+## SavedVariables: WarcraftyConfig
+## SavedVariablesPerCharacter: WarcraftyConfigPerChar
+Warcrafty.xml
+Warcrafty.lua
+WarcraftyConfig.lua

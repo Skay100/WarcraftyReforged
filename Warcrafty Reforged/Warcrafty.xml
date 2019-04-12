@@ -1,0 +1,1407 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://www.blizzard.com/wow/ui/">
+<Script file="Warcrafty.lua"/>
+<Frame name="WarcraftyScripts">
+	<Scripts>
+		<OnLoad>
+			WarcraftyOnLoad(self);
+		</OnLoad>
+		<OnUpdate>
+			WarcraftyOnUpdate();
+		</OnUpdate>
+		<OnEvent>
+			WarcraftyOnEvent(self, event, ...);
+		</OnEvent>
+	</Scripts>
+</Frame>
+
+<Frame name="WarcraftyOptionFrameBoxTemplate" virtual="true">
+	<Layers>
+		<Layer level="BACKGROUND">
+			<FontString name="$parentTitle" inherits="GameFontHighlight">
+				<Anchors>
+					<Anchor point="BOTTOMLEFT" relativePoint="TOPLEFT">
+						<Offset>
+							<AbsDimension x="9" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</FontString>
+		</Layer>
+	</Layers>
+	<Backdrop bgFile="Interface\Tooltips\UI-Tooltip-Background" edgeFile="Interface\Tooltips\UI-Tooltip-Border" tile="true">
+		<EdgeSize>
+			<AbsValue val="16"/>
+		</EdgeSize>
+		<TileSize>
+			<AbsValue val="16"/>
+		</TileSize>
+		<BackgroundInsets>
+			<AbsInset left="5" right="5" top="5" bottom="5"/>
+		</BackgroundInsets>
+	</Backdrop>
+	<Scripts>
+		<OnLoad>
+			this:SetBackdropBorderColor(0.4, 0.4, 0.4);
+			this:SetBackdropColor(0.5, 0.5, 0.5);
+		</OnLoad>
+	</Scripts>
+</Frame>
+	
+<PlayerModel name="WarcraftyPlayerModel" frameStrata="BACKGROUND" frameLevel="1" parent="UIParent">
+	<Size>
+		<AbsDimension x="100" y="150"/>
+	</Size>
+	<Anchors>
+		<Anchor point="BOTTOM">
+			<Offset>
+				<AbsDimension x="-247" y="0"/>
+			</Offset>
+		</Anchor>
+	</Anchors>
+	<Layers>
+		<Layer level="BACKGROUND">
+			<Texture name="WarcraftyPlayerClassTexture">
+				<Color r=".75" g=".75" b=".75" a="1" /> 
+				<Size>
+					<AbsDimension x="100" y="150"/>  
+				</Size>
+				<Anchors>
+					<Anchor point="CENTER">
+						<Offset>
+							<AbsDimension x="0" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Texture> 
+		</Layer>
+	</Layers>
+	<Scripts>
+		<OnShow>
+			self:SetCamera(0);
+		</OnShow>
+	</Scripts>
+</PlayerModel>
+<PlayerModel name="WarcraftyPetModel" frameStrata="BACKGROUND" frameLevel="1" parent="UIParent">
+	<Size>
+		<AbsDimension x="30" y="38"/>
+	</Size>
+	<Anchors>
+		<Anchor point="BOTTOM">
+			<Offset>
+				<AbsDimension x="-281" y="0"/>
+			</Offset>
+		</Anchor>
+	</Anchors>
+	<Layers>
+		<Layer level="BACKGROUND">
+			<Texture name="WarcraftyPetClassTexture">
+				<Color r="0" g="0" b="0" a="1" /> 
+				<Size>
+					<AbsDimension x="100" y="38"/>  
+				</Size>
+				<Anchors>
+					<Anchor point="CENTER">
+						<Offset>
+							<AbsDimension x="33" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Texture> 
+		</Layer>
+	</Layers>
+	<Scripts>
+		<OnShow>
+			self:SetCamera(0);
+		</OnShow>
+	</Scripts>
+</PlayerModel>
+<PlayerModel name="WarcraftyTargetModel" frameStrata="BACKGROUND" frameLevel="1" parent="UIParent">
+	<Size>
+		<AbsDimension x="100" y="150"/>
+	</Size>
+	<Anchors>
+		<Anchor point="BOTTOM">
+			<Offset>
+				<AbsDimension x="247" y="0"/>
+			</Offset>
+		</Anchor>
+	</Anchors>
+	<Layers>
+		<Layer level="BACKGROUND">
+			<Texture name="WarcraftyTargetClassTexture">
+				<Color r=".75" g=".75" b=".75" a="1" /> 
+				<Size>
+					<AbsDimension x="100" y="150"/>  
+				</Size>
+				<Anchors>
+					<Anchor point="CENTER">
+						<Offset>
+							<AbsDimension x="0" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Texture> 
+		</Layer>
+	</Layers>
+	<Scripts>
+		<OnShow>
+			self:SetCamera(0);
+		</OnShow>
+	</Scripts>
+</PlayerModel>
+<PlayerModel name="WarcraftyTargetTargetModel" frameStrata="BACKGROUND" frameLevel="1" parent="UIParent">
+	<Size>
+		<AbsDimension x="30" y="38"/>
+	</Size>
+	<Anchors>
+		<Anchor point="BOTTOM">
+			<Offset>
+				<AbsDimension x="214" y="0"/>
+			</Offset>
+		</Anchor>
+	</Anchors>
+	<Layers>
+		<Layer level="BACKGROUND">
+			<Texture name="WarcraftyTargetTargetClassTexture">
+				<Color r="0" g="0" b="0" a="1" /> 
+				<Size>
+					<AbsDimension x="100" y="38"/>  
+				</Size>
+				<Anchors>
+					<Anchor point="CENTER">
+						<Offset>
+							<AbsDimension x="34" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Texture> 
+		</Layer>
+	</Layers>
+	<Scripts>
+		<OnShow>
+			self:SetCamera(0);
+		</OnShow>
+	</Scripts>
+</PlayerModel>
+
+<Frame name="WarcraftyPlayerFrame" frameStrata="BACKGROUND" frameLevel="2" parent="UIParent">
+	<Size> 
+		<AbsDimension x="1360" y="256"/> 
+	</Size> 
+	<Anchors> 
+		<Anchor point="BOTTOM"> 
+			<Offset>
+				<AbsDimension x="0" y="0"/>
+			</Offset>
+		</Anchor>
+	</Anchors> 
+	<Layers> 
+		<Layer level="BACKGROUND"> 
+			<Texture name="WarcraftyPlayerTexture" file="Interface\AddOns\Warcrafty\textures\warcraftyplayerorc">
+				<Color r="1" g="1" b="1" a="1" /> 
+				<Size>
+					<AbsDimension x="1024" y="256"/>  
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOMLEFT">
+						<Offset>
+							<AbsDimension x="0" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<TexCoords left="0" right="1" top="0" bottom="1" /> 
+			</Texture> 
+		</Layer>
+		<Layer level="BORDER">
+			<Texture name="WarcraftyPlayerStatusTexture" file="Interface\AddOns\Warcrafty\textures\warcraftystatusglow" alphaMode="add" hidden="true">
+				<Color r="1" g="1" b="1" a=".25" /> 
+				<Size>
+					<AbsDimension x="256" y="290"/>  
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset>
+							<AbsDimension x="-93" y="-75"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Texture>
+		</Layer>
+		<Layer level="ARTWORK">
+			<FontString name="WarcraftyPlayerNameText" inherits="SystemFont_Med1">
+				<Color r="1" g="1" b="1"/>
+				<Size>
+					<AbsDimension x="120" y="6"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset>
+							<AbsDimension x="-93" y="133"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</FontString>	
+			<FontString name="WarcraftyPlayerLevelText" inherits="GameFontNormalSmall">
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset>
+							<AbsDimension x="-250" y="124"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</FontString>
+			<FontString name="WarcraftyPlayerDeadText" inherits="GameFontNormalSmall" text="DEAD">
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset>
+							<AbsDimension x="-91" y="111"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</FontString>
+			<Texture name="WarcraftyPlayerLeaderIcon" file="Interface\GroupFrame\UI-Group-LeaderIcon" hidden="false">
+				<Size>
+					<AbsDimension x="16" y="16"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset>
+							<AbsDimension x="-22" y="125"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Texture>
+			<Texture name="WarcraftyPlayerPVPIcon" hidden="false">
+				<Size>
+					<AbsDimension x="40" y="40"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset>
+							<AbsDimension x="-159" y="107"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Texture>
+			<Texture name="WarcraftyPlayerRaidTargetIcon" file="Interface\TargetingFrame\UI-RaidTargetingIcons" hidden="false">
+				<Size>
+					<AbsDimension x="20" y="20"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset>
+							<AbsDimension x="-224" y="118"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Texture>	
+			<Texture name="WarcraftyPlayerRestIcon" file="Interface\CharacterFrame\UI-StateIcon" hidden="false">
+				<Size>
+					<AbsDimension x="30" y="30"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset>
+							<AbsDimension x="-275" y="114"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<TexCoords left="0" right="0.5" top="0" bottom="0.421875"/>
+			</Texture>
+		</Layer>
+	</Layers> 
+	<Frames>
+		<StatusBar name="WarcraftyPlayerFrameSpellBar" inherits="CastingBarFrameTemplate" hidden="true">
+			<Size>
+				<AbsDimension x="140" y="18"/>
+			</Size>
+			<Anchors>
+				<Anchor point="BOTTOM">
+					<Offset>
+						<AbsDimension x="-83" y="126"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+			<Layers>
+				<Layer level="BACKGROUND">
+					<Texture setAllPoints="true">
+						<Color r="0" g="0" b="0" a="1"/>
+					</Texture>		
+				</Layer>
+			</Layers>
+			<Scripts>
+				<OnLoad function="Warcrafty_Spellbar_OnLoad"/>
+				<OnEvent function="Warcrafty_Spellbar_OnEvent"/>
+			</Scripts>
+		</StatusBar>
+		<StatusBar name="WarcraftyPlayerHealthBar" frameLevel="3" drawLayer="BORDER">
+			<Size>
+				<AbsDimension x="160" y="18"/>  
+			</Size>
+			<Anchors>
+				<Anchor point="BOTTOM">
+					<Offset>
+						<AbsDimension x="-93" y="103"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+			<TexCoords left="0" right="1" top="0" bottom="1" /> 
+			<BarTexture file="Interface\TargetingFrame\UI-StatusBar"/>
+			<BarColor r="0" g="1" b="0"/>
+			<Layers>
+				<Layer level="ARTWORK">
+					<Texture name="WarcraftyPlayerHealthBarBorder" file="Interface\CastingBar\UI-CastingBar-Border-Small">
+						<Color r="1" g="1" b="1" a="1" /> 
+						<Size>
+							<AbsDimension x="215" y="70"/>  
+						</Size>
+						<Anchors>
+							<Anchor point="CENTER">
+								<Offset>
+									<AbsDimension x="0" y="1"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<TexCoords left="0" right="1" top="0" bottom="1" /> 
+					</Texture>
+					<FontString name="WarcraftyPlayerHealthText" inherits="SystemFont_Shadow_Small">
+						<Size>
+							<AbsDimension x="185" y="16"/>
+						</Size>
+						<Anchors>
+							<Anchor point="CENTER">
+								<Offset>
+									<AbsDimension x="0" y="1"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</FontString>
+				</Layer> 
+			</Layers>
+		</StatusBar>
+		<StatusBar name="WarcraftyPlayerPowerBar" frameLevel="4" drawLayer="BORDER">
+			<Size>
+				<AbsDimension x="160" y="18"/>  
+			</Size>
+			<Anchors>
+				<Anchor point="BOTTOM">
+					<Offset>
+						<AbsDimension x="-93" y="82"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+			<TexCoords left="0" right="1" top="0" bottom="1" /> 
+			<BarTexture file="Interface\TargetingFrame\UI-StatusBar"/>
+			<BarColor r="1" g="1" b="1"/>
+			<Layers>
+				<Layer level="OVERLAY">
+					<Texture name="WarcraftyPlayerPowerBarBorder" file="Interface\CastingBar\UI-CastingBar-Border-Small">
+						<Color r="1" g="1" b="1" a="1" /> 
+						<Size>
+							<AbsDimension x="215" y="70"/>  
+						</Size>
+						<Anchors>
+							<Anchor point="CENTER">
+								<Offset>
+									<AbsDimension x="0" y="1"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<TexCoords left="0" right="1" top="0" bottom="1" /> 
+					</Texture>
+					<FontString name="WarcraftyPlayerPowerText" inherits="SystemFont_Shadow_Small">
+						<Size>
+							<AbsDimension x="185" y="16"/>
+						</Size>
+						<Anchors>
+							<Anchor point="CENTER">
+								<Offset>
+									<AbsDimension x="0" y="1"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</FontString>			
+				</Layer> 
+			</Layers>
+		</StatusBar>
+		
+		<StatusBar name="WarcraftyPlayerDruidBar" drawLayer="BORDER" frameLevel="5" hidden="true">
+			<Size>
+				<AbsDimension x="160" y="3"/>  
+			</Size>
+			<Anchors>
+				<Anchor point="BOTTOM">
+					<Offset>
+						<AbsDimension x="-93" y="85"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+			<TexCoords left="0" right="1" top="0" bottom="1" /> 
+			<BarTexture file="Interface\TargetingFrame\UI-StatusBar"/>
+			<BarColor r="0" g="0" b="1"/>
+		</StatusBar>
+		
+		<StatusBar name="WarcraftyPetHealthBar" drawLayer="BORDER">
+			<Size>
+				<AbsDimension x="67" y="12"/>  
+			</Size>
+			<Anchors>
+				<Anchor point="BOTTOM">
+					<Offset>
+						<AbsDimension x="-231" y="12"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+			<TexCoords left="0" right="1" top="0" bottom="1" /> 
+			<BarTexture file="Interface\TargetingFrame\UI-StatusBar"/>
+			<BarColor r="0" g="1" b="0"/>
+			<Layers>
+				<Layer level="ARTWORK">
+					<Texture name="WarcraftyPetTexture" file="Interface\AddOns\Warcrafty\textures\warcraftysmallframeorc">
+						<Color r="1" g="1" b="1" a="1" /> 
+						<Size>
+							<AbsDimension x="128" y="64"/>  
+						</Size>
+						<Anchors>
+							<Anchor point="BOTTOM">
+								<Offset>
+									<AbsDimension x="-14" y="-12"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<TexCoords left="0" right="1" top="0" bottom="1" /> 
+					</Texture> 
+					<FontString name="WarcraftyPetHealthText" inherits="SystemFont_Shadow_Small">
+						<Size>
+							<AbsDimension x="185" y="16"/>
+						</Size>
+						<Anchors>
+							<Anchor point="CENTER">
+								<Offset>
+									<AbsDimension x="0" y="1"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</FontString>
+					<FontString name="WarcraftyPetNameText" inherits="SystemFont_Shadow_Small">
+						<Size>
+							<AbsDimension x="70" y="16"/>
+						</Size>
+						<Anchors>
+							<Anchor point="CENTER">
+								<Offset>
+									<AbsDimension x="0" y="14"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</FontString>
+				</Layer> 
+			</Layers>
+			<Frames>
+				<Frame name="WarcraftyPetFrameHappiness" enableMouse="true" hidden="false">
+					<Size>
+						<AbsDimension x="20" y="20"/>
+					</Size>
+					<Anchors>
+						<Anchor point="RIGHT" relativePoint="LEFT">
+							<Offset>
+								<AbsDimension x="-30" y="-6"/>
+							</Offset>
+						</Anchor>
+					</Anchors>
+					<Layers>
+						<Layer level="BACKGROUND">
+							<Texture name="WarcraftyPetFrameHappinessTexture" file="Interface\PetPaperDollFrame\UI-PetHappiness" setAllPoints="true">
+								<Size>
+									<AbsDimension x="20" y="20"/>
+								</Size>
+								<TexCoords left="0" right="0.1875" top="0" bottom="0.359375"/>
+							</Texture>			
+						</Layer>
+					</Layers>
+				</Frame>
+			</Frames>
+		</StatusBar>
+		<StatusBar name="WarcraftyPetPowerBar" drawLayer="BACKGROUND">
+			<Size>
+				<AbsDimension x="67" y="12"/>  
+			</Size>
+			<Anchors>
+				<Anchor point="BOTTOM">
+					<Offset>
+						<AbsDimension x="-231" y="0"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+			<TexCoords left="0" right="1" top="0" bottom="1" /> 
+			<BarTexture file="Interface\TargetingFrame\UI-StatusBar"/>
+			<BarColor r="1" g="1" b="1"/>
+			<Layers>
+				<Layer level="ARTWORK">
+					<FontString name="WarcraftyPetPowerText" inherits="SystemFont_Shadow_Small">
+						<Size>
+							<AbsDimension x="185" y="16"/>
+						</Size>
+						<Anchors>
+							<Anchor point="CENTER">
+								<Offset>
+									<AbsDimension x="0" y="1"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</FontString>			
+				</Layer> 
+			</Layers>
+		</StatusBar>				
+	</Frames>
+</Frame>
+
+<Button name="WarcraftyPlayerMenu" frameStrata="BACKGROUND" toplevel="true" inherits="SecureUnitButtonTemplate" parent="UIParent">
+	<Size>
+		<AbsDimension x="100" y="107"/>
+	</Size>
+	<Anchors>
+		<Anchor point="BOTTOM">
+			<Offset>
+				<AbsDimension x="-247" y="38"/>
+			</Offset>
+		</Anchor>
+	</Anchors>
+	<HitRectInsets>
+		<AbsInset left="0" right="0" top="0" bottom="0"/>
+	</HitRectInsets>
+	<Scripts>
+		<OnLoad>
+			WarcraftyPlayerMenu_OnLoad(self);
+			self.unit = "player";
+		</OnLoad>
+		<OnEnter function="UnitFrame_OnEnter"/>
+		<OnLeave function="UnitFrame_OnLeave"/>
+	</Scripts>
+</Button>
+<Button name="WarcraftyPetMenu" frameStrata="BACKGROUND" toplevel="true" inherits="SecureUnitButtonTemplate" parent="UIParent">
+	<Size>
+		<AbsDimension x="100" y="38"/>
+	</Size>
+	<Anchors>
+		<Anchor point="BOTTOM">
+			<Offset>
+				<AbsDimension x="-247" y="0"/>
+			</Offset>
+		</Anchor>
+	</Anchors>
+	<HitRectInsets>
+		<AbsInset left="0" right="0" top="0" bottom="0"/>
+	</HitRectInsets>
+	<Scripts>
+		<OnLoad>
+			WarcraftyPetMenu_OnLoad(self);
+			self.unit = "pet";
+		</OnLoad>
+		<OnEnter function="UnitFrame_OnEnter"/>
+		<OnLeave function="UnitFrame_OnLeave"/>
+	</Scripts>
+</Button>
+
+<Frame name="WarcraftyTargetFrame" frameStrata="BACKGROUND" frameLevel="2" parent="UIParent">
+	<Size> 
+	  <AbsDimension x="1360" y="256"/> 
+	</Size> 
+	<Anchors> 
+	  <Anchor point="BOTTOM"> 
+		<Offset>
+		  <AbsDimension x="0" y="0"/>
+		</Offset>
+	  </Anchor>
+	</Anchors> 
+	<Layers> 
+		<Layer level="BACKGROUND"> 
+			<Texture name="WarcraftyTargetTexture" file="Interface\AddOns\Warcrafty\textures\warcraftytargetorc">
+				<Color r="1" g="1" b="1" a="1" /> 
+				<Size>
+					<AbsDimension x="512" y="256"/>  
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset>
+							<AbsDimension x="54" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<TexCoords left="0" right="1" top="0" bottom="1" /> 
+			</Texture>
+		</Layer>
+		<Layer level="BORDER">
+			<Texture name="WarcraftyTargetStatusTexture" file="Interface\AddOns\Warcrafty\textures\warcraftystatusglow" alphaMode="add" hidden="true">
+				<Color r="1" g="1" b="1" a=".25" /> 
+				<Size>
+					<AbsDimension x="256" y="290"/>  
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset>
+							<AbsDimension x="93" y="-75"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Texture>
+		</Layer>
+		<Layer level="ARTWORK">
+			<FontString name="WarcraftyTargetNameText" inherits="SystemFont_Small">
+				<Color r="1" g="1" b="1"/>
+				<Size>
+					<AbsDimension x="120" y="6"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset>
+							<AbsDimension x="93" y="138"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</FontString>
+			<FontString name="WarcraftyTargetClassText" inherits="SystemFont_Small">
+				<Color r="1" g="1" b="1"/>
+				<Size>
+					<AbsDimension x="100" y="6"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset>
+							<AbsDimension x="93" y="127"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</FontString>	
+			<FontString name="WarcraftyTargetLevelText" inherits="GameFontNormalSmall">
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset>
+							<AbsDimension x="250" y="124"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</FontString>
+			<FontString name="WarcraftyTargetDeadText" inherits="GameFontNormalSmall" text="DEAD">
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset>
+							<AbsDimension x="93" y="109"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</FontString>
+			<Texture name="WarcraftyTargetHighLevelTexture" file="Interface\TargetingFrame\UI-TargetingFrame-Skull">
+				<Size>
+					<AbsDimension x="16" y="16"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset>
+							<AbsDimension x="250" y="120"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Texture>
+			<Texture name="WarcraftyTargetLeaderIcon" file="Interface\GroupFrame\UI-Group-LeaderIcon" hidden="false">
+				<Size>
+					<AbsDimension x="16" y="16"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset>
+							<AbsDimension x="22" y="125"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Texture>
+			<Texture name="WarcraftyTargetPVPIcon" hidden="false">
+				<Size>
+					<AbsDimension x="40" y="40"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset>
+							<AbsDimension x="170" y="107"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Texture>
+			<Texture name="WarcraftyTargetRaidTargetIcon" file="Interface\TargetingFrame\UI-RaidTargetingIcons" hidden="true">
+				<Size>
+					<AbsDimension x="20" y="20"/>
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset>
+							<AbsDimension x="224" y="118"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Texture>
+		</Layer>
+	</Layers> 
+	<Frames>
+		<StatusBar name="WarcraftyTargetFrameSpellBar" inherits="CastingBarFrameTemplate" hidden="true">
+			<Size>
+				<AbsDimension x="140" y="18"/>
+			</Size>
+			<Anchors>
+				<Anchor point="BOTTOM">
+					<Offset>
+						<AbsDimension x="103" y="126"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+			<Layers>
+				<Layer level="BACKGROUND">
+					<Texture setAllPoints="true">
+						<Color r="0" g="0" b="0" a="1"/>
+					</Texture>		
+				</Layer>
+			</Layers>
+			<Scripts>
+				<OnLoad function="Warcrafty_Spellbar_OnLoad"/>
+				<OnEvent function="Warcrafty_Spellbar_OnEvent"/>
+			</Scripts>
+		</StatusBar>
+		<StatusBar name="WarcraftyTargetHealthBar" drawLayer="BORDER" hidden="true">
+			<Size>
+				<AbsDimension x="160" y="18"/>  
+			</Size>
+			<Anchors>
+				<Anchor point="BOTTOM">
+					<Offset>
+						<AbsDimension x="93" y="103"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+			<TexCoords left="0" right="1" top="0" bottom="1" /> 
+			<BarTexture file="Interface\TargetingFrame\UI-StatusBar"/>
+			<BarColor r="0" g="1" b="0"/>
+			<Layers>
+				<Layer level="ARTWORK">
+					<Texture name="WarcraftyTargetHealthBarBorder" file="Interface\CastingBar\UI-CastingBar-Border-Small">
+						<Color r="1" g="1" b="1" a="1" /> 
+						<Size>
+							<AbsDimension x="215" y="70"/>  
+						</Size>
+						<Anchors>
+							<Anchor point="CENTER">
+								<Offset>
+									<AbsDimension x="0" y="1"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<TexCoords left="0" right="1" top="0" bottom="1" /> 
+					</Texture>
+					<FontString name="WarcraftyTargetHealthText" inherits="SystemFont_Shadow_Small">
+						<Size>
+							<AbsDimension x="185" y="16"/>
+						</Size>
+						<Anchors>
+							<Anchor point="CENTER">
+								<Offset>
+									<AbsDimension x="0" y="1"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</FontString>					
+				</Layer> 
+			</Layers>
+		</StatusBar>
+		<StatusBar name="WarcraftyTargetPowerBar" drawLayer="BORDER" hidden="true">
+			<Size>
+				<AbsDimension x="160" y="18"/>  
+			</Size>
+			<Anchors>
+				<Anchor point="BOTTOM">
+					<Offset>
+						<AbsDimension x="93" y="82"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+			<TexCoords left="0" right="1" top="0" bottom="1" /> 
+			<BarTexture file="Interface\TargetingFrame\UI-StatusBar"/>
+			<BarColor r="1" g="1" b="1"/>
+			<Layers>
+				<Layer level="OVERLAY">
+					<Texture name="WarcraftyTargetPowerBarBorder" file="Interface\CastingBar\UI-CastingBar-Border-Small">
+						<Color r="1" g="1" b="1" a="1" /> 
+						<Size>
+							<AbsDimension x="215" y="70"/>  
+						</Size>
+						<Anchors>
+							<Anchor point="CENTER">
+								<Offset>
+									<AbsDimension x="0" y="1"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<TexCoords left="0" right="1" top="0" bottom="1" /> 
+					</Texture>
+					<FontString name="WarcraftyTargetPowerText" inherits="SystemFont_Shadow_Small">
+						<Size>
+							<AbsDimension x="185" y="16"/>
+						</Size>
+						<Anchors>
+							<Anchor point="CENTER">
+								<Offset>
+									<AbsDimension x="0" y="1"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</FontString>						
+				</Layer> 
+			</Layers>
+		</StatusBar>
+		<StatusBar name="WarcraftyTargetTargetHealthBar" drawLayer="BORDER">
+			<Size>
+				<AbsDimension x="67" y="12"/>  
+			</Size>
+			<Anchors>
+				<Anchor point="BOTTOM">
+					<Offset>
+						<AbsDimension x="262" y="12"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+			<TexCoords left="0" right="1" top="0" bottom="1" /> 
+			<BarTexture file="Interface\TargetingFrame\UI-StatusBar"/>
+			<BarColor r="0" g="1" b="0"/>
+			<Layers>
+				<Layer level="ARTWORK">
+					<Texture name="WarcraftyTargetTargetTexture" file="Interface\AddOns\Warcrafty\textures\warcraftysmallframeorc">
+						<Color r="1" g="1" b="1" a="1" /> 
+						<Size>
+							<AbsDimension x="128" y="64"/>  
+						</Size>
+						<Anchors>
+							<Anchor point="BOTTOM">
+								<Offset>
+									<AbsDimension x="-13" y="-12"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<TexCoords left="0" right="1" top="0" bottom="1" /> 
+					</Texture> 
+					<FontString name="WarcraftyTargetTargetHealthText" inherits="SystemFont_Shadow_Small">
+						<Size>
+							<AbsDimension x="185" y="16"/>
+						</Size>
+						<Anchors>
+							<Anchor point="CENTER">
+								<Offset>
+									<AbsDimension x="0" y="1"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</FontString>
+					<FontString name="WarcraftyTargetTargetNameText" inherits="SystemFont_Shadow_Small">
+						<Size>
+							<AbsDimension x="70" y="16"/>
+						</Size>
+						<Anchors>
+							<Anchor point="CENTER">
+								<Offset>
+									<AbsDimension x="0" y="14"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</FontString>
+				</Layer> 
+			</Layers>
+			<Frames>
+			</Frames>
+		</StatusBar>
+		<StatusBar name="WarcraftyTargetTargetPowerBar" drawLayer="BACKGROUND">
+			<Size>
+				<AbsDimension x="67" y="12"/>  
+			</Size>
+			<Anchors>
+				<Anchor point="BOTTOM">
+					<Offset>
+						<AbsDimension x="262" y="0"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+			<TexCoords left="0" right="1" top="0" bottom="1" /> 
+			<BarTexture file="Interface\TargetingFrame\UI-StatusBar"/>
+			<BarColor r="1" g="1" b="1"/>
+			<Layers>
+				<Layer level="ARTWORK">
+					<FontString name="WarcraftyTargetTargetPowerText" inherits="SystemFont_Shadow_Small">
+						<Size>
+							<AbsDimension x="185" y="16"/>
+						</Size>
+						<Anchors>
+							<Anchor point="CENTER">
+								<Offset>
+									<AbsDimension x="0" y="1"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</FontString>			
+				</Layer> 
+			</Layers>
+		</StatusBar>				
+	</Frames>
+</Frame>
+
+
+<Button name="WarcraftyTargetMenu" frameStrata="BACKGROUND" toplevel="true" inherits="SecureUnitButtonTemplate" parent="UIParent">
+	<Size>
+		<AbsDimension x="100" y="107"/>
+	</Size>
+	<Anchors>
+		<Anchor point="BOTTOM">
+			<Offset>
+				<AbsDimension x="247" y="38"/>
+			</Offset>
+		</Anchor>
+	</Anchors>
+	<HitRectInsets>
+		<AbsInset left="0" right="0" top="0" bottom="0"/>
+	</HitRectInsets>
+	<Scripts>
+		<OnLoad>
+			WarcraftyTargetMenu_OnLoad(self);
+			self.unit = "target";
+		</OnLoad>
+		<OnEnter function="UnitFrame_OnEnter"/>
+		<OnLeave function="UnitFrame_OnLeave"/>
+	</Scripts>
+</Button>
+
+
+<Button name="WarcraftyBuffButtonTemplate" frameStrata="LOW" virtual="true" parent="UIParent">
+	<Size>
+		<AbsDimension x="17" y="17"/>
+	</Size>
+	<Anchors> 
+		<Anchor point="BOTTOM"> 
+			<Offset>
+				<AbsDimension x="0" y="0"/>
+			</Offset>
+		</Anchor>
+	</Anchors> 
+	<Layers>
+		<Layer level="ARTWORK">
+			<Texture name="$parentIcon" setAllPoints="true"/>
+		</Layer>
+		<Layer level="ARTWORK">
+			<FontString name="$parentCount" inherits="NumberFontNormalSmall">
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT">
+						<Offset>
+							<AbsDimension x="2" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</FontString>
+		</Layer>
+		<Layer level="OVERLAY">
+			<Texture name="$parentStealable" file="Interface\TargetingFrame\UI-TargetingFrame-Stealable" hidden="true" alphaMode="ADD">
+				<Size>
+					<AbsDimension x="17" y="17"/>
+				</Size>
+				<Anchors>
+					<Anchor point="CENTER">
+						<Offset>
+							<AbsDimension x="0" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</Texture>
+		</Layer>
+	</Layers>
+	<Frames>
+		<Cooldown name="$parentCooldown" inherits="CooldownFrameTemplate" reverse="true" drawEdge="true">
+			<Anchors>
+				<Anchor point="CENTER">
+					<Offset>
+						<AbsDimension x="0" y="-1"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+		</Cooldown>
+	</Frames>
+	<Scripts>
+		<OnLoad>
+			self:RegisterForClicks("RightButtonUp");
+		</OnLoad>
+		<OnUpdate>
+			if ( GameTooltip:IsOwned(self) ) then
+				GameTooltip:SetUnitBuff(self.unit, self:GetID());
+			end
+		</OnUpdate>
+		<OnEnter>
+			GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT", 15, -25);
+			GameTooltip:SetUnitBuff(self.unit, self:GetID());
+		</OnEnter>
+		<OnLeave>
+			GameTooltip:Hide();
+		</OnLeave>
+		<OnClick>
+			WarcraftyBuffButton_OnClick(self);
+		</OnClick>
+	</Scripts>
+</Button>
+<Button name="WarcraftyDebuffButtonTemplate" frameStrata="LOW" virtual="true" parent="UIParent">
+	<Size>
+		<AbsDimension x="17" y="17"/>
+	</Size>
+	<Layers>
+		<Layer level="ARTWORK">
+			<Texture name="$parentIcon" setAllPoints="true"/>
+		</Layer>
+		<Layer level="OVERLAY">
+			<Texture name="$parentBorder" file="Interface\Buttons\UI-Debuff-Overlays">
+				<Size>
+					<AbsDimension x="17" y="17"/>
+				</Size>
+				<Anchors>
+					<Anchor point="CENTER">
+						<Offset>
+							<AbsDimension x="0" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<TexCoords left="0.296875" right="0.5703125" top="0" bottom="0.515625"/>
+			</Texture>	
+			<FontString name="$parentCount" inherits="NumberFontNormalSmall">
+				<Anchors>
+					<Anchor point="BOTTOMRIGHT">
+						<Offset>
+							<AbsDimension x="-1" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+			</FontString>
+		</Layer>
+	</Layers>
+	<Frames>
+		<Cooldown name="$parentCooldown" inherits="CooldownFrameTemplate" reverse="true" drawEdge="true" hidden="true">
+			<Anchors>
+				<Anchor point="CENTER">
+					<Offset>
+						<AbsDimension x="0" y="-1"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+		</Cooldown>
+	</Frames>
+	<Scripts>
+		<OnUpdate>
+			if ( GameTooltip:IsOwned(self) ) then
+				GameTooltip:SetUnitDebuff(self.unit, self:GetID());
+			end
+		</OnUpdate>
+		<OnEnter>
+			GameTooltip:SetOwner(self, "ANCHOR_BOTTOMRIGHT", 15, -25);
+			GameTooltip:SetUnitDebuff(self.unit, self:GetID());
+		</OnEnter>
+		<OnLeave>
+			GameTooltip:Hide();
+		</OnLeave>
+	</Scripts>
+</Button>
+
+<Button name="WarcraftyTempEnchantButtonTemplate" virtual="true">
+	<Size x="20" y="20"/>
+	<Layers>
+		<Layer level="BACKGROUND">
+			<Texture name="$parentIcon"/>
+		</Layer>
+		<Layer level="OVERLAY">
+			<Texture name="$parentBorder" file="Interface\Buttons\UI-TempEnchant-Border">
+				<Size>
+					<AbsDimension x="20" y="20"/>
+				</Size>
+				<Anchors>
+					<Anchor point="CENTER"/>
+				</Anchors>
+			</Texture>
+		</Layer>
+	</Layers>
+	<Frames>
+		<Cooldown name="$parentCooldown" inherits="CooldownFrameTemplate" reverse="true" drawEdge="true" hidden="true">
+			<Anchors>
+				<Anchor point="CENTER">
+					<Offset>
+						<AbsDimension x="0" y="-1"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+		</Cooldown>
+	</Frames>
+	<Scripts>
+		<OnLoad>
+			TempEnchantButton_OnLoad(self);
+		</OnLoad>
+		<OnClick>
+			TempEnchantButton_OnClick(self, button, down);
+		</OnClick>
+		<OnEnter>
+			TempEnchantButton_OnEnter(self, motion);
+		</OnEnter>
+		<OnLeave>
+			GameTooltip:Hide();
+		</OnLeave>
+	</Scripts>
+</Button>
+
+<Frame name="WarcraftyTemporaryEnchantFrame" parent="WarcraftyPlayerFrame" frameStrata="LOW" toplevel="true">
+	<Size>
+		<AbsDimension x="40" y="20"/>
+	</Size>
+	<Anchors>
+		<Anchor point="BOTTOM" relativePoint="BOTTOM">
+			<Offset>
+				<AbsDimension x="-185" y="60"/>
+			</Offset>
+		</Anchor>
+	</Anchors>
+	<Frames>
+		<Button name="WarcraftyTempEnchant1" inherits="WarcraftyTempEnchantButtonTemplate"/>
+		<Button name="WarcraftyTempEnchant2" inherits="WarcraftyTempEnchantButtonTemplate"/>
+	</Frames>
+</Frame>
+	
+<Frame name="WarcraftyComboPointTemplate" virtual="true">
+	<Size>
+		<AbsDimension x="12" y="12"/>
+	</Size>
+	<Layers>
+		<Layer level="BACKGROUND">
+			<Texture file="Interface\ComboFrame\ComboPoint">
+				<Size>
+					<AbsDimension x="12" y="16"/>
+				</Size>
+				<Anchors>
+					<Anchor point="CENTER"/>
+				</Anchors>
+				<TexCoords left="0" right="0.375" top="0" bottom="1"/>
+			</Texture>
+		</Layer>
+		<Layer level="ARTWORK">
+			<Texture name="$parentHighlight" file="Interface\ComboFrame\ComboPoint">
+				<Size>
+					<AbsDimension x="8" y="16"/>
+				</Size>
+				<Anchors>
+					<Anchor point="CENTER">
+						<Offset>
+							<AbsDimension x="2" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<TexCoords left="0.375" right="0.5625" top="0" bottom="1"/>
+			</Texture>
+		</Layer>
+		<Layer level="OVERLAY">
+			<Texture name="$parentShine" file="Interface\ComboFrame\ComboPoint" alpha="0" hidden="true" alphaMode="ADD">
+				<Size>
+					<AbsDimension x="14" y="16"/>
+				</Size>
+				<Anchors>
+					<Anchor point="CENTER">
+						<Offset>
+							<AbsDimension x="0" y="4"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<TexCoords left="0.5625" right="1" top="0" bottom="1"/>
+			</Texture>
+		</Layer>
+	</Layers>
+</Frame>
+<Frame name="WarcraftyCombo" frameStrata="MEDIUM" toplevel="true" parent="UIParent" hidden="true" alpha="0">
+	<Size>
+		<AbsDimension x="12" y="12"/>
+	</Size>
+	<Anchors>
+		<Anchor point="BOTTOM" relativeTo="WarcraftyTargetFrame">
+			<Offset>
+				<AbsDimension x="70" y="152"/>
+			</Offset>
+		</Anchor>
+	</Anchors>
+	<Frames>
+		<Frame name="$parentPoint1" inherits="WarcraftyComboPointTemplate">
+			<Anchors>
+				<Anchor point="CENTER">
+					<Offset>
+						<AbsDimension x="0" y="0"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+		</Frame>
+		<Frame name="$parentPoint2" inherits="WarcraftyComboPointTemplate">
+			<Anchors>
+				<Anchor point="LEFT" relativeTo="WarcraftyComboPoint1" relativePoint="RIGHT">
+					<Offset>
+						<AbsDimension x="0" y="0"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+		</Frame>
+		<Frame name="$parentPoint3" inherits="WarcraftyComboPointTemplate">
+			<Anchors>
+				<Anchor point="LEFT" relativeTo="WarcraftyComboPoint2" relativePoint="RIGHT">
+					<Offset>
+						<AbsDimension x="0" y="0"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+		</Frame>
+		<Frame name="$parentPoint4" inherits="WarcraftyComboPointTemplate">
+			<Anchors>
+				<Anchor point="LEFT" relativeTo="WarcraftyComboPoint3" relativePoint="RIGHT">
+					<Offset>
+						<AbsDimension x="0" y="0"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+		</Frame>
+		<Frame name="$parentPoint5" inherits="WarcraftyComboPointTemplate">
+			<Anchors>
+				<Anchor point="LEFT" relativeTo="WarcraftyComboPoint4" relativePoint="RIGHT">
+					<Offset>
+						<AbsDimension x="0" y="0"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+		</Frame>
+	</Frames>
+</Frame>
+
+<Frame name="WarcraftyBarFrame" frameStrata="BACKGROUND" frameLevel="2" parent="UIParent">
+	<Size> 
+	  <AbsDimension x="1360" y="256"/> 
+	</Size> 
+	<Anchors> 
+	  <Anchor point="BOTTOM"> 
+		<Offset>
+		  <AbsDimension x="0" y="0"/>
+		</Offset>
+	  </Anchor>
+	</Anchors> 
+	<Layers> 
+		<Layer level="BACKGROUND"> 
+			<Texture name="WarcraftyBarTexture" file="Interface\AddOns\Warcrafty\textures\warcraftybarorc1">
+				<Color r="1" g="1" b="1" a="1" /> 
+				<Size>
+					<AbsDimension x="512" y="256"/>  
+				</Size>
+				<Anchors>
+					<Anchor point="BOTTOM">
+						<Offset>
+							<AbsDimension x="423" y="0"/>
+						</Offset>
+					</Anchor>
+				</Anchors>
+				<TexCoords left="0" right="1" top="0" bottom="1" /> 
+			</Texture>
+		</Layer>
+	</Layers>
+	<Frames>
+		<StatusBar name="WarcraftyXPBar" drawLayer="BORDER">
+			<Size>
+				<AbsDimension x="800" y="8"/>  
+			</Size>
+			<Anchors>
+				<Anchor point="BOTTOM">
+					<Offset>
+						<AbsDimension x="0" y="167"/>
+					</Offset>
+				</Anchor>
+			</Anchors>
+			<TexCoords left="0" right="1" top="0" bottom="1" /> 
+			<BarTexture file="Interface\TargetingFrame\UI-StatusBar"/>
+			<BarColor r=".3" g=".3" b="1"/>
+			<Layers>
+				<Layer level="ARTWORK">
+					<Texture name="WarcraftyXPBarTexture0" file="Interface\MainMenuBar\UI-MainMenuBar-Dwarf">
+						<Size>
+							<AbsDimension x="200" y="10"/>
+						</Size>
+						<Anchors>
+							<Anchor point="BOTTOM">
+								<Offset>
+									<AbsDimension x="-300" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<TexCoords left="0" right="1.0" top="0.79296875" bottom="0.83203125"/>
+					</Texture>
+					<Texture name="WarcraftyXPBarTexture1" file="Interface\MainMenuBar\UI-MainMenuBar-Dwarf">
+						<Size>
+							<AbsDimension x="200" y="10"/>
+						</Size>
+						<Anchors>
+							<Anchor point="BOTTOM">
+								<Offset>
+									<AbsDimension x="-100" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<TexCoords left="0" right="1.0" top="0.54296875" bottom="0.58203125"/>
+					</Texture>
+					<Texture name="WarcraftyXPBarTexture2" file="Interface\MainMenuBar\UI-MainMenuBar-Dwarf">
+						<Size>
+							<AbsDimension x="200" y="10"/>
+						</Size>
+						<Anchors>
+							<Anchor point="BOTTOM">
+								<Offset>
+									<AbsDimension x="100" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<TexCoords left="0" right="1.0" top="0.29296875" bottom="0.33203125"/>
+					</Texture>
+					<Texture name="WarcraftyXPBarTexture3" file="Interface\MainMenuBar\UI-MainMenuBar-Dwarf">
+						<Size>
+							<AbsDimension x="200" y="10"/>
+						</Size>
+						<Anchors>
+							<Anchor point="BOTTOM">
+								<Offset>
+									<AbsDimension x="300" y="0"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+						<TexCoords left="0" right="1.0" top="0.04296875" bottom="0.08203125"/>
+					</Texture>
+					<FontString name="WarcraftyXPBarText" inherits="SystemFont_Outline_Small" hidden="true">
+						<Size>
+							<AbsDimension x="800" y="16"/>
+						</Size>
+						<Anchors>
+							<Anchor point="CENTER">
+								<Offset>
+									<AbsDimension x="0" y="1"/>
+								</Offset>
+							</Anchor>
+						</Anchors>
+					</FontString>
+				</Layer>
+				<Layer level="BACKGROUND">
+					<Texture>
+						<Color r="0.0" g="0.0" b="0.0" a="0.5"/>
+					</Texture>
+				</Layer>
+			</Layers>
+			<Scripts>
+				<OnEnter>
+					WarcraftyXPBarText:Show()
+				</OnEnter>
+				<OnLeave>
+					WarcraftyXPBarText:Hide()
+				</OnLeave>
+			</Scripts>	
+		</StatusBar>
+	</Frames>
+</Frame>
+</Ui> 

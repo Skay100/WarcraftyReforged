@@ -1,0 +1,80 @@
+1.00:
+- First Release
+
+1.01:
+- Frames exist on a lower level.
+- Gray health bar for tapped targets.
+
+1.02:
+- All frames have parent=UIParent. (Frames will now hide when the rest of the UI is hidden)
+- There is a scale setting.
+- Auras cast by the player should have larger icons than other auras.
+- Auto show additional buffs/debuffs depending on current numbers of buffs and debuffs.
+- Target models are cleared if the target is not visible (ie 100 yards away or more).
+
+1.03:
+- Fixed a bug with the way buffs and debuffs are displayed.
+- Added alliance theme.
+- Added a druid mana bar that can be shown while shapeshifted.
+
+1.04:
+- Minimap added.
+- 3D models will no longer revert to the full body shot after bringing up and closing the world map.
+- Added textures for displaying 2 or 3 action bars.
+
+1.05
+- Cast bars added.
+- Tooltips will be displayed when mousing over player/target/pet portraits.
+- Combat glow texture/ resting texture updated.
+- DK runes and shaman totems are anchored to the player frame.
+- Temporary weapon buffs will show up as auras in the player frame.
+- Class/Classification/Elite text for target.
+
+1.06
+- Cast bar icon is located to the left of the cast bar now, the bar is slightly shorter.
+- Cast bar has a solid background, name text can't be seen through the cast bar.
+- Actionbars added.
+- Rest icon instead of ugly yellow texture.
+
+1.07
+- XP bar added.
+- GUI for settings created. The slash command "/warcrafty" will open the settings window.
+- Anchors for tooltips moved above actionbars.
+- Text settings for health/mana added.
+- Pet happiness displayed for hunter pets.
+
+1.08
+- Moved some functions from onupdate to onevent.
+- Target of target and pet power text % will no longer try to divide by 0 on units with no power.
+- Fixed errors relating to having "none" and "append %" as the health/mana text settings.
+- Cast bars for tradeskills will now be displayed.
+- Bags will open above actionbars.
+
+3.2.0
+- Changed version number to match the version of the game it works for.
+- Updated addon to work for patch 3.2.
+- Can now click through the top right (where the old minimap was).
+- Added Nightelf and Undead textures. (Special thanks to Hero_Lief)
+
+3.2.0a
+- Bug fix related to minimap scaling.
+
+3.2.0c
+- Temporary bug fix for minimap position on login.
+
+3.2.2
+- Temporary weapon enchants now assume max duration is 60 min or 30 min for shamans.
+- An error that showed up sometimes during login magically disappeared.
+- Moved pet action buttons to left of player portrait instead of above.
+- Default background for pet action buttons should no longer appear.
+- New shaman totem bar is displayed above action bars.
+
+3.2.2a
+- Tooltip anchor location can be set to bottomright or to cursor.
+- Action buttons are pretty.
+- Dead text for player and target should update correctly.
+- Leader icon should update when the leadership changes.
+
+3.3.0
+- Updated TOC.
+- Fixed a few problems with the actionbar and minimap on startup.
