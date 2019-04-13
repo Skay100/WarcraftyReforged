@@ -1,0 +1,11 @@
+## Interface: 80100
+## Title: Warcrafty Reforged
+## Notes: Unit Frames
+## Version: 0.1a
+## Author: Skay & Deep
+## DefaultState: Enabled
+## SavedVariables: WarcraftyConfig
+## SavedVariablesPerCharacter: WarcraftyConfigPerChar
+Warcrafty.xml
+Warcrafty.lua
+WarcraftyConfig.lua
