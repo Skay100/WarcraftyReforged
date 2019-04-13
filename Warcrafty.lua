@@ -467,7 +467,7 @@ function WarcraftyCheckPlayer()
 	WarcraftyPlayerLevelText:SetText(UnitLevel("player"))
 	WarcraftyPlayerLevelText:SetVertexColor(1.0, 0.82, 0.0)
 
-	if ( UnitIsPartyLeader("player") ) then
+	if ( UnitIsGroupLeader("player") ) then
 		WarcraftyPlayerLeaderIcon:Show()
 	else
 		WarcraftyPlayerLeaderIcon:Hide()
@@ -561,7 +561,7 @@ function WarcraftyCheckTarget()
 		WarcraftyTargetHighLevelTexture:Show()
 	end
 
-	if ( UnitIsPartyLeader("target") ) then
+	if ( UnitIsGroupLeader("target") ) then
 		WarcraftyTargetLeaderIcon:Show()
 	else
 		WarcraftyTargetLeaderIcon:Hide()
