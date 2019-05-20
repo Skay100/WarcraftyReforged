@@ -1605,6 +1605,18 @@ function WarcraftyActionbarOnUpdate()
 		bars = bars + 1
 	end
 	if (bars ~= lastBars) then
+		if showBar1 then
+			bars = bars + 1
+			showBar1 = 1
+	else
+			showBar1 = 0
+	end
+	if showBar2 then
+			bars = bars + 1
+			showBar2 = 1
+	else
+			showBar2 = 0
+	end
 		WarcraftyConfigPerChar.bars = showBar1 + showBar2 + 1
 		WarcraftySetBars()
 		WarcraftySetSkin(WarcraftyConfigPerChar.skin)
