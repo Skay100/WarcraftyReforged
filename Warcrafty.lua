@@ -1,17 +1,53 @@
 SLASH_WARCRAFTY1 = "/warcrafty"
+WarcraftyConfig = WarcraftyConfig or {}
+
 local function handler()
-	InterfaceOptionsFrame_OpenToCategory(WarcraftyOptions);
+    if InterfaceOptions_AddCategory then
+        InterfaceOptions_AddCategory(WarcraftyOptions)
+    else
+        print("InterfaceOptions_AddCategory is not available!")
+    end
 end
+
 SlashCmdList["WARCRAFTY"] = handler
 
+-- Event handler to ensure options are added after the addon is loaded
+local function OnEvent(self, event, arg1)
+    if event == "ADDON_LOADED" and arg1 == "Warcrafty" then
+        -- Now we can safely add the category to the interface options
+        if InterfaceOptions_AddCategory then
+            InterfaceOptions_AddCategory(WarcraftyOptions)
+        else
+            print("Failed to add category to Interface Options!")
+        end
+        self:UnregisterEvent("ADDON_LOADED")  -- Remove the event after the addon is loaded
+    end
+end
 
-function GameTooltip_SetDefaultAnchor(GameTooltip, parent, ...)
-	if (WarcraftyConfig.tooltip == 1) then
-		GameTooltip:SetOwner(WarcraftyBarFrame, "ANCHOR_TOPRIGHT");
-	elseif (WarcraftyConfig.tooltip == 2) then
-		GameTooltip:SetOwner(parent, "ANCHOR_CURSOR");
-	end
-	GameTooltip:SetBackdropColor(.15,.15,.15)
+-- Create an event frame to listen for ADDON_LOADED
+local eventFrame = CreateFrame("Frame")
+eventFrame:RegisterEvent("ADDON_LOADED")
+eventFrame:SetScript("OnEvent", OnEvent)
+
+function round(num, idp)
+    if idp and idp > 0 then
+        local mult = 10^idp
+        return math.floor(num * mult + 0.5) / mult
+    end
+    return math.floor(num + 0.5)
+end
+
+function GameTooltip_SetDefaultAnchor(tooltip, parent, ...)
+    if (WarcraftyConfig.tooltip == 1) then
+        tooltip:SetOwner(WarcraftyBarFrame, "ANCHOR_TOPRIGHT")
+    elseif (WarcraftyConfig.tooltip == 2) then
+        tooltip:SetOwner(parent, "ANCHOR_CURSOR")
+    end
+
+    -- only call SetBackdropColor if the API still provides it
+    if tooltip.SetBackdropColor then
+        tooltip:SetBackdropColor(0.15, 0.15, 0.15)
+    end
 end
 
 function WarcraftyOnLoad(self) 
@@ -63,145 +99,119 @@ function WarcraftyBuffButton_OnClick (self)
 end
 
 
-function WarcraftyOnUpdate() 
-	CONTAINER_OFFSET_Y = 230; --ugly hack
-	local playerHealth = UnitHealth("player")
-	if (playerHealth > 99999) then
-		playerHealth = round(playerHealth/1000, 0).."K"
-	end
-	local playerHealthMax = UnitHealthMax("player")
-	if (playerHealthMax > 99999) then
-		playerHealthMax = round(playerHealthMax/1000, 0).."K"
-	end
-	local playerPower = UnitPower("player")
-	if (playerPower > 99999) then
-		playerPower = round(playerPower/1000, 0).."K"
-	end
-	local playerPowerMax = UnitPowerMax("player")
-	if (playerPowerMax > 99999) then
-		playerPowerMax = round(playerPowerMax/1000, 0).."K"
-	end
-	local targetHealth = UnitHealth("target")
-	if (targetHealth > 99999) then
-		targetHealth = round(targetHealth/1000, 0).."K"
-	end
-	local targetHealthMax = UnitHealthMax("target")
-	if (targetHealthMax > 99999) then
-		targetHealthMax = round(targetHealthMax/1000, 0).."K"
-	end
-	local targetPower = UnitPower("target")
-	if (targetPower > 99999) then
-		targetPower = round(targetPower/1000, 0).."K"
-	end
-	local targetPowerMax = UnitPowerMax("target")
-	if (targetPowerMax > 99999) then
-		targetPowerMax = round(targetPowerMax/1000, 0).."K"
+function WarcraftyOnUpdate()
+	CONTAINER_OFFSET_Y = 230
+	local function formatValue(val)
+		return (val > 99999) and (math.floor(val / 1000) .. "K") or val
 	end
 
-	if (WarcraftyConfig.textstyle == 1) then
-		WarcraftyPlayerHealthText:SetText(playerHealth.."/"..playerHealthMax)
-		WarcraftyPlayerPowerText:SetText(playerPower.."/"..playerPowerMax)
-	elseif (WarcraftyConfig.textstyle == 2) then
+	local playerHealth, playerHealthMax = formatValue(UnitHealth("player")), formatValue(UnitHealthMax("player"))
+	local playerPower, playerPowerMax = formatValue(UnitPower("player")), formatValue(UnitPowerMax("player"))
+	local targetHealth, targetHealthMax = formatValue(UnitHealth("target")), formatValue(UnitHealthMax("target"))
+	local targetPower, targetPowerMax = formatValue(UnitPower("target")), formatValue(UnitPowerMax("target"))
+
+	if WarcraftyConfig.textstyle == 1 then
+		WarcraftyPlayerHealthText:SetText(playerHealth .. "/" .. playerHealthMax)
+		WarcraftyPlayerPowerText:SetText(playerPower .. "/" .. playerPowerMax)
+	elseif WarcraftyConfig.textstyle == 2 then
 		WarcraftyPlayerHealthText:SetText(playerHealth)
 		WarcraftyPlayerPowerText:SetText(playerPower)
-	elseif (WarcraftyConfig.textstyle == 3) then
+	elseif WarcraftyConfig.textstyle == 3 then
 		WarcraftyPlayerHealthText:SetText(" ")
 		WarcraftyPlayerPowerText:SetText(" ")
 	end
-	if (WarcraftyConfig.textpercent) then
-		WarcraftyPlayerHealthText:SetText(WarcraftyPlayerHealthText:GetText().." "..round((UnitHealth("player")/UnitHealthMax("player"))*100, 0).."%")
-		WarcraftyPlayerPowerText:SetText(WarcraftyPlayerPowerText:GetText().." "..round((UnitPower("player")/UnitPowerMax("player"))*100, 0).."%")
+
+	if WarcraftyConfig.textpercent then
+		WarcraftyPlayerHealthText:SetText(WarcraftyPlayerHealthText:GetText() .. " " .. math.floor(UnitHealth("player") / UnitHealthMax("player") * 100) .. "%")
+		WarcraftyPlayerPowerText:SetText(WarcraftyPlayerPowerText:GetText() .. " " .. math.floor(UnitPower("player") / UnitPowerMax("player") * 100) .. "%")
 	end
+
 	WarcraftyPlayerHealthBar:SetMinMaxValues(0, UnitHealthMax("player"))
-    WarcraftyPlayerHealthBar:SetValue(UnitHealth("player"))
+	WarcraftyPlayerHealthBar:SetValue(UnitHealth("player"))
 	WarcraftyPlayerPowerBar:SetMinMaxValues(0, UnitPowerMax("player"))
-    WarcraftyPlayerPowerBar:SetValue(UnitPower("player"))
-	
-	if ( (UnitHealth("player") <= 0) and UnitIsConnected("player") ) then
+	WarcraftyPlayerPowerBar:SetValue(UnitPower("player"))
+
+	if UnitHealth("player") <= 0 and UnitIsConnected("player") then
 		WarcraftyPlayerDeadText:Show()
 		WarcraftyPlayerHealthText:Hide()
 	else
 		WarcraftyPlayerDeadText:Hide()
 		WarcraftyPlayerHealthText:Show()
 	end
-	
-	WarcraftyConfigPerChar = WarcraftyConfigPerChar or {}
-	
-	if (WarcraftyConfigPerChar.druidbar == true) then
+
+	if WarcraftyConfigPerChar.druidbar == true then
 		WarcraftyPlayerDruidBar:SetMinMaxValues(0, UnitPowerMax("player", 0))
 		WarcraftyPlayerDruidBar:SetValue(UnitPower("player", 0))
 	end
 
-	if ( UnitExists("target") ) then
-		if (WarcraftyConfig.textstyle == 1) then
-			WarcraftyTargetHealthText:SetText(targetHealth.."/"..targetHealthMax)
-			WarcraftyTargetPowerText:SetText(targetPower.."/"..targetPowerMax)
-		elseif (WarcraftyConfig.textstyle == 2) then
+	if UnitExists("target") then
+		if WarcraftyConfig.textstyle == 1 then
+			WarcraftyTargetHealthText:SetText(targetHealth .. "/" .. targetHealthMax)
+			WarcraftyTargetPowerText:SetText(targetPower .. "/" .. targetPowerMax)
+		elseif WarcraftyConfig.textstyle == 2 then
 			WarcraftyTargetHealthText:SetText(targetHealth)
 			WarcraftyTargetPowerText:SetText(targetPower)
-		elseif (WarcraftyConfig.textstyle == 3) then
+		elseif WarcraftyConfig.textstyle == 3 then
 			WarcraftyTargetHealthText:SetText(" ")
 			WarcraftyTargetPowerText:SetText(" ")
 		end
-		if (WarcraftyConfig.textpercent) then
-			WarcraftyTargetHealthText:SetText(WarcraftyTargetHealthText:GetText().." "..round((UnitHealth("target")/UnitHealthMax("target"))*100, 0).."%  ")
-			WarcraftyTargetPowerText:SetText(WarcraftyTargetPowerText:GetText().." "..round((UnitPower("target")/UnitPowerMax("target"))*100, 0).."%  ")
+		if WarcraftyConfig.textpercent then
+			WarcraftyTargetHealthText:SetText(WarcraftyTargetHealthText:GetText() .. " " .. math.floor(UnitHealth("target") / UnitHealthMax("target") * 100) .. "%  ")
+			WarcraftyTargetPowerText:SetText(WarcraftyTargetPowerText:GetText() .. " " .. math.floor(UnitPower("target") / UnitPowerMax("target") * 100) .. "%  ")
 		end
-		if ( targetPowerMax == 0 ) then
-			WarcraftyTargetPowerText:SetText("")
-		end
+		if targetPowerMax == 0 then WarcraftyTargetPowerText:SetText("") end
 		WarcraftyTargetHealthBar:SetMinMaxValues(0, UnitHealthMax("target"))
 		WarcraftyTargetHealthBar:SetValue(UnitHealth("target"))
 		WarcraftyTargetPowerBar:SetMinMaxValues(0, UnitPowerMax("target"))
 		WarcraftyTargetPowerBar:SetValue(UnitPower("target"))
-		if (UnitIsTapDenied("target")) then
-			-- Target is tapped by another player
-			WarcraftyTargetHealthBar:SetStatusBarColor(.75,.75,.75)
+		if UnitIsTapDenied("target") then
+			WarcraftyTargetHealthBar:SetStatusBarColor(0.75, 0.75, 0.75)
 		else
-			-- target is not tapped by another player
-			WarcraftyTargetHealthBar:SetStatusBarColor(0,1,0)
+			WarcraftyTargetHealthBar:SetStatusBarColor(0, 1, 0)
 		end
 	end
-	if ( (UnitHealth("target") <= 0) and UnitIsConnected("target") ) then
+
+	if UnitHealth("target") <= 0 and UnitIsConnected("target") then
 		WarcraftyTargetDeadText:Show()
 		WarcraftyTargetHealthText:Hide()
 	else
 		WarcraftyTargetDeadText:Hide()
 		WarcraftyTargetHealthText:Show()
 	end
-	
-	if ( UnitExists("pet") ) then
-		if (UnitPowerMax("pet") == 0) then
+
+	if UnitExists("pet") then
+		if UnitPowerMax("pet") == 0 then
 			WarcraftyPetPowerText:Hide()
 		else
 			WarcraftyPetPowerText:Show()
 		end
-		WarcraftyPetHealthText:SetText(round((UnitHealth("pet")/UnitHealthMax("pet"))*100, 0).."%  ")
-		WarcraftyPetPowerText:SetText(round((UnitPower("pet")/UnitPowerMax("pet"))*100, 0).."%  ")
+		WarcraftyPetHealthText:SetText(math.floor(UnitHealth("pet") / UnitHealthMax("pet") * 100) .. "%  ")
+		WarcraftyPetPowerText:SetText(math.floor(UnitPower("pet") / UnitPowerMax("pet") * 100) .. "%  ")
 		WarcraftyPetHealthBar:SetMinMaxValues(0, UnitHealthMax("pet"))
 		WarcraftyPetHealthBar:SetValue(UnitHealth("pet"))
 		WarcraftyPetPowerBar:SetMinMaxValues(0, UnitPowerMax("pet"))
 		WarcraftyPetPowerBar:SetValue(UnitPower("pet"))
 	end
-	if ( UnitExists("targettarget") ) then
-		if (UnitPowerMax("targettarget") == 0) then
+
+	if UnitExists("targettarget") then
+		if UnitPowerMax("targettarget") == 0 then
 			WarcraftyTargetTargetPowerText:Hide()
 		else
 			WarcraftyTargetTargetPowerText:Show()
 		end
-		WarcraftyTargetTargetHealthText:SetText(round((UnitHealth("targettarget")/UnitHealthMax("targettarget"))*100, 0).."%")
-		WarcraftyTargetTargetPowerText:SetText(round((UnitPower("targettarget")/UnitPowerMax("targettarget"))*100, 0).."%")
+		WarcraftyTargetTargetHealthText:SetText(math.floor(UnitHealth("targettarget") / UnitHealthMax("targettarget") * 100) .. "%")
+		WarcraftyTargetTargetPowerText:SetText(math.floor(UnitPower("targettarget") / UnitPowerMax("targettarget") * 100) .. "%")
 		WarcraftyTargetTargetHealthBar:SetMinMaxValues(0, UnitHealthMax("targettarget"))
 		WarcraftyTargetTargetHealthBar:SetValue(UnitHealth("targettarget"))
 		WarcraftyTargetTargetPowerBar:SetMinMaxValues(0, UnitPowerMax("targettarget"))
 		WarcraftyTargetTargetPowerBar:SetValue(UnitPower("targettarget"))
 	end
-	
-	if (WarcraftyConfig.actionbar) then
+
+	if WarcraftyConfig.actionbar then
 		WarcraftyActionbarOnUpdate()
 	end
 	WarcraftyTempEnchantOnUpdate()
-end 
+end
 
 function WarcraftyOnEvent(self, event, ...)
 	local arg1 = ...
@@ -358,12 +368,19 @@ function WarcraftyOnEvent(self, event, ...)
 	elseif ( event == "ADDON_LOADED" ) then
 		if ( arg1 == "Warcrafty" ) then
 			Warcrafty_AddPanelOptions()
-			RuneFrame:ClearAllPoints()
-			RuneFrame:SetParent("WarcraftyPlayerFrame")
-			RuneFrame:SetPoint("BOTTOM", WarcraftyPlayerFrame, "BOTTOM", -88, 150)
-			TotemFrame:ClearAllPoints()
-			TotemFrame:SetParent("WarcraftyPlayerFrame")
-			TotemFrame:SetPoint("BOTTOM", WarcraftyPlayerFrame, "BOTTOM", -95, 140)
+C_Timer.After(1, function()
+	if RuneFrame and WarcraftyPlayerFrame then
+		RuneFrame:ClearAllPoints()
+		RuneFrame:SetParent(WarcraftyPlayerFrame)
+		RuneFrame:SetPoint("BOTTOM", WarcraftyPlayerFrame, "BOTTOM", -88, 150)
+	end
+
+	if TotemFrame and WarcraftyPlayerFrame then
+		TotemFrame:ClearAllPoints()
+		TotemFrame:SetParent(WarcraftyPlayerFrame)
+		TotemFrame:SetPoint("BOTTOM", WarcraftyPlayerFrame, "BOTTOM", -95, 140)
+	end
+end)
 			if ( WarcraftyConfig == nil) then
 				WarcraftyConfig = {}
 			end
@@ -707,327 +724,185 @@ MAX_TARGET_DEBUFFS = 24
 MAX_TARGET_BUFFS = 24
 
 function WarcraftyAuraUpdate(unit)
-	local button, buttonName
-	local name, rank, icon, count, debuffType, duration, expirationTime, isMine, isStealable
-	local buttonIcon, buttonCount, buttonCooldown, buttonStealable, buttonBorder
-	
-	local hasMainHandEnchant, mainHandExpiration, mainHandCharges, hasOffHandEnchant, offHandExpiration, offHandCharges = GetWeaponEnchantInfo();
-	local numWeaponEnchants = 0
-	if (hasMainHandEnchant) then
-		numWeaponEnchants = numWeaponEnchants + 1
-	end
-	if (hasOffHandEnchant) then
-		numWeaponEnchants = numWeaponEnchants + 1
-	end
-	
-	local xoffset
-	if (unit == "player") then
-		xoffset = -185
-	elseif (unit == "target") then
-		xoffset = 0
-	end
-	
-	numPlayerBuffs = 0
-	numTargetBuffs = 0
-	
-	
-	for i=1, MAX_TARGET_BUFFS do
-		name, rank, icon, count, debuffType, duration, expirationTime, isMine, isStealable = UnitBuff(unit, i)
-		buttonName = "Warcrafty"..unit.."Buff"..i
-		button = _G[buttonName]
-		
-		if ( not button ) then
-			if ( not icon ) then
-				break
-			else
-				button = CreateFrame("Button", buttonName, WarcraftyTargetFrame, "WarcraftyBuffButtonTemplate")
-				button.unit = unit
-			end
-		end
+    -- ensure UnitBuff and UnitDebuff exist
+    if not UnitBuff or not UnitDebuff then
+        return
+    end
 
-		if ( icon ) then
-			button:SetID(i)
+    local button, buttonName
+    local name, rank, icon, count, debuffType, duration, expirationTime, isMine, isStealable
+    local buttonIcon, buttonCount, buttonCooldown, buttonStealable, buttonBorder
 
-			-- set the icon
-			buttonIcon = _G[buttonName.."Icon"]
-			buttonIcon:SetTexture(icon)
+    local hasMainHandEnchant, mainHandExpiration, mainHandCharges,
+          hasOffHandEnchant, offHandExpiration, offHandCharges = GetWeaponEnchantInfo()
+    local numWeaponEnchants = (hasMainHandEnchant and 1 or 0) + (hasOffHandEnchant and 1 or 0)
 
-			-- set the count
-			buttonCount = _G[buttonName.."Count"]
-			if ( count > 1 ) then
-				buttonCount:SetText(count)
-				buttonCount:Show()
-			else
-				buttonCount:Hide()
-			end
+    local xoffset = (unit == "player") and -185 or (unit == "target") and 0
 
-			-- Handle cooldowns
-			buttonCooldown = _G[buttonName.."Cooldown"]
-			if ( duration > 0 ) then
-				buttonCooldown:Show()
-				CooldownFrame_SetTimer(buttonCooldown, expirationTime - duration, duration, 1)
-			else
-				buttonCooldown:Hide()
-			end
+    local numPlayerBuffs, numTargetBuffs = 0, 0
 
-			-- Show stealable frame if the target is not a player, the buff is stealable.
-			buttonStealable = _G[buttonName.."Stealable"]
-			if ( not playerIsTarget and isStealable ) then
-				buttonStealable:Show()
-			else
-				buttonStealable:Hide()
-			end
+    for i = 1, MAX_TARGET_BUFFS do
+        -- safely call UnitBuff
+        name, rank, icon, count, debuffType, duration, expirationTime, isMine, isStealable = UnitBuff(unit, i)
+        if not icon then break end
 
-			-- Set the buff to be big if the buff is cast by the player and the target is not the player
-			if (isMine == "player") then
-				button:SetWidth(20)
-				button:SetHeight(20)
-			else
-				button:SetWidth(17)
-				button:SetHeight(17)
-			end
-			if (unit == "player") then
-				numPlayerBuffs = numPlayerBuffs + 1
-			elseif (unit == "target") then
-				numTargetBuffs = numTargetBuffs +1
-			end
-			button:ClearAllPoints()
-			if (unit == "player") then
-				if ( (i+numWeaponEnchants) <= 8 ) then --put buffs 1-8 in row 1
-					button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", (i+numWeaponEnchants)*20 + xoffset, 70)
-					button:Show()
-				elseif ( (i+numWeaponEnchants) >= 9 and (i+numWeaponEnchants) <= 16) then --put buffs 8-16 in row 2
-					button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", ((i+numWeaponEnchants)-8)*20 + xoffset, 50)
-					button:Show()
-				elseif ( ((i+numWeaponEnchants) >= 17 and (i+numWeaponEnchants) <= 24) and numPlayerDebuffs <= 8 ) then --put buffs 17-24 in row 3
-					button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", ((i+numWeaponEnchants)-16)*20 + xoffset, 30)
-					button:Show()
-				else
-					button:Hide()
-				end
-			elseif (unit == "target") then
-				if ( i <= 8 ) then --put buffs 1-8 in row 1
-					button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", i*20 + xoffset, 70)
-					button:Show()
-				elseif ( i >= 9 and i <= 16) then --put buffs 8-16 in row 2
-					button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", (i-8)*20 + xoffset, 50)
-					button:Show()
-				elseif ( (i >= 17 and i <= 24) and numTargetDebuffs <= 8 ) then --put buffs 17-24 in row 3
-					button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", (i-16)*20 + xoffset, 30)
-					button:Show()
-				else
-					button:Hide()
-				end
-			end
-		else
-			button:Hide()
-		end  
-	end
+        buttonName = "Warcrafty" .. unit .. "Buff" .. i
+        button = _G[buttonName]
+        if not button then
+            button = CreateFrame("Button", buttonName, WarcraftyTargetFrame, "WarcraftyBuffButtonTemplate")
+            button.unit = unit
+        end
 
-	local color
-	numPlayerDebuffs = 0
-	numTargetDebuffs = 0
-	for i=1, MAX_TARGET_DEBUFFS do
-		name, rank, icon, count, debuffType, duration, expirationTime, isMine = UnitDebuff(unit, i)
-		buttonName = "Warcrafty"..unit.."Debuff"..i
-		button = _G[buttonName]
-		if ( not button ) then
-			if ( not icon ) then
-				break
-			else
-				button = CreateFrame("Button", buttonName, WarcraftyTargetFrame, "WarcraftyDebuffButtonTemplate")
-				button.unit = unit
-			end
-		end
-		if ( icon ) then
-			button:SetID(i)
+        button:SetID(i)
+        buttonIcon = _G[buttonName .. "Icon"]
+        buttonIcon:SetTexture(icon)
 
-			-- set the icon
-			buttonIcon = _G[buttonName.."Icon"]
-			buttonIcon:SetTexture(icon)
+        buttonCount = _G[buttonName .. "Count"]
+        if count > 1 then buttonCount:SetText(count); buttonCount:Show() else buttonCount:Hide() end
 
-			-- set the count
-			buttonCount = _G[buttonName.."Count"]
-			if ( count > 1 ) then
-				buttonCount:SetText(count)
-				buttonCount:Show()
-			else
-				buttonCount:Hide()
-			end
+        buttonCooldown = _G[buttonName .. "Cooldown"]
+        if duration and duration > 0 then
+            buttonCooldown:Show()
+            CooldownFrame_SetTimer(buttonCooldown, expirationTime - duration, duration, 1)
+        else
+            buttonCooldown:Hide()
+        end
 
-			-- Handle cooldowns
-			buttonCooldown = _G[buttonName.."Cooldown"]
-			if ( duration > 0 ) then
-				buttonCooldown:Show()
-				CooldownFrame_SetTimer(buttonCooldown, expirationTime - duration, duration, 1)
-			else
-				buttonCooldown:Hide()
-			end
+        buttonStealable = _G[buttonName .. "Stealable"]
+        if isStealable then buttonStealable:Show() else buttonStealable:Hide() end
 
-			-- set debuff type color
-			if ( debuffType ) then
-				color = DebuffTypeColor[debuffType]
-			else
-				color = DebuffTypeColor["none"]
-			end
-			buttonBorder = _G[buttonName.."Border"]
-			buttonBorder:SetVertexColor(color.r, color.g, color.b)
+        if isMine == "player" then button:SetSize(20, 20) else button:SetSize(17, 17) end
 
-			-- Set the buff to be big if the buff is cast by the player
+        if unit == "player" then numPlayerBuffs = numPlayerBuffs + 1 else numTargetBuffs = numTargetBuffs + 1 end
 
-			if (isMine == "player") then
-				button:SetWidth(20)
-				button:SetHeight(20)
-				buttonBorder:SetWidth(20)
-				buttonBorder:SetHeight(20)
-			else
-				button:SetWidth(17)
-				button:SetHeight(17)
-				buttonBorder:SetWidth(17)
-				buttonBorder:SetHeight(17)
-			end
+        button:ClearAllPoints()
+        if unit == "player" then
+            local idx = i + numWeaponEnchants
+            if idx <= 8 then
+                button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", idx * 20 + xoffset, 70)
+            elseif idx <= 16 then
+                button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", (idx - 8) * 20 + xoffset, 50)
+            elseif idx <= 24 then
+                button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", (idx - 16) * 20 + xoffset, 30)
+            end
+        else
+            if i <= 8 then
+                button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", i * 20 + xoffset, 70)
+            elseif i <= 16 then
+                button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", (i - 8) * 20 + xoffset, 50)
+            elseif i <= 24 then
+                button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", (i - 16) * 20 + xoffset, 30)
+            end
+        end
+        button:Show()
+    end
 
-			if (unit == "player") then
-				numPlayerDebuffs = numPlayerDebuffs + 1
-			elseif (unit == "target") then
-				numTargetDebuffs = numTargetDebuffs +1
-			end
+    -- Debuffs
+    local numPlayerDebuffs, numTargetDebuffs = 0, 0
+    for i = 1, MAX_TARGET_DEBUFFS do
+        name, rank, icon, count, debuffType, duration, expirationTime, isMine = UnitDebuff(unit, i)
+        if not icon then break end
 
-			button:ClearAllPoints()
-			
-			if (unit == "player") then
-				if ((numPlayerBuffs+numWeaponEnchants) <= 8) then
-					if (i <= 8) then --put debuffs 1-8 in row 2
-						button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", i*20 + xoffset, 50)
-						button:Show()
-					elseif (i > 8 and i <=16) then --put debuffs 9-16 in row 3
-						button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", (i-8)*20 + xoffset, 30)
-						button:Show()
-					elseif (i >= 16) then --put debuffs 17-24 in row 4 
-						button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", (i-16)*20 + xoffset, 10)
-						button:Show()
-					end
-				elseif ((numPlayerBuffs+numWeaponEnchants) <=16) then
-					if (i <= 8) then --put debuffs 1-8 in row 3
-						button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", (i)*20 + xoffset, 30)
-						button:Show()
-					elseif (i > 8 and i <=16) then --put debuffs 7-16 in row 4
-						button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", (i-8)*20 + xoffset, 10)
-						button:Show()
-					end
-				elseif ((numPlayerBuffs+numWeaponEnchants) <=24) then
-					if (i <= 8 and (numPlayerDebuffs <= 8 and unit == "player") or (numTargetDebuffs <= 8 and unit == "target")) then --put debuffs 1-8 in row 4
-						button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", (i)*20 + xoffset, 10)
-						button:Show()
-					elseif (i <= 8 and (numPlayerDebuffs > 8 and unit == "player") or (numTargetDebuffs > 8 and unit == "target")) then --put debuffs 1-8 in row 3
-						button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", (i)*20 + xoffset, 30)
-						button:Show()
-					elseif (i <= 16 and (numPlayerDebuffs > 8 and unit == "player") or (numTargetDebuffs > 8 and unit == "target")) then --put debuffs 7-16 in row 4
-						button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", (i-8)*20 + xoffset, 10)
-						button:Show()
-					end
-				else
-					button.Hide()
-				end
-			elseif (unit == "target") then
-				if (numTargetBuffs <= 8) then
-					if (i <= 8) then --put debuffs 1-8 in row 2
-						button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", i*20 + xoffset, 50)
-						button:Show()
-					elseif (i > 8 and i <=16) then --put debuffs 9-16 in row 3
-						button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", (i-8)*20 + xoffset, 30)
-						button:Show()
-					elseif (i >= 16) then --put debuffs 17-24 in row 4 
-						button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", (i-16)*20 + xoffset, 10)
-						button:Show()
-					end
-				elseif (numTargetBuffs <=16) then
-					if (i <= 8) then --put debuffs 1-8 in row 3
-						button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", (i)*20 + xoffset, 30)
-						button:Show()
-					elseif (i > 8 and i <=16) then --put debuffs 7-16 in row 4
-						button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", (i-8)*20 + xoffset, 10)
-						button:Show()
-					end
-				elseif (numTargetBuffs <=24) then
-					if (i <= 8 and (numPlayerDebuffs <= 8 and unit == "player") or (numTargetDebuffs <= 8 and unit == "target")) then --put debuffs 1-8 in row 4
-						button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", (i)*20 + xoffset, 10)
-						button:Show()
-					elseif (i <= 8 and (numPlayerDebuffs > 8 and unit == "player") or (numTargetDebuffs > 8 and unit == "target")) then --put debuffs 1-8 in row 3
-						button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", (i)*20 + xoffset, 30)
-						button:Show()
-					elseif (i <= 16 and (numPlayerDebuffs > 8 and unit == "player") or (numTargetDebuffs > 8 and unit == "target")) then --put debuffs 7-16 in row 4
-						button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", (i-8)*20 + xoffset, 10)
-						button:Show()
-					end
-				else
-					button.Hide()
-				end
-			end
-		else
-			button:Hide()
-		end
-	end
+        buttonName = "Warcrafty" .. unit .. "Debuff" .. i
+        button = _G[buttonName] or CreateFrame("Button", buttonName, WarcraftyTargetFrame, "WarcraftyDebuffButtonTemplate")
+        button.unit = unit
+        button:SetID(i)
+
+        buttonIcon = _G[buttonName .. "Icon"]
+        buttonIcon:SetTexture(icon)
+
+        buttonCount = _G[buttonName .. "Count"]
+        if count > 1 then buttonCount:SetText(count); buttonCount:Show() else buttonCount:Hide() end
+
+        buttonCooldown = _G[buttonName .. "Cooldown"]
+        if duration and duration > 0 then
+            buttonCooldown:Show()
+            CooldownFrame_SetTimer(buttonCooldown, expirationTime - duration, duration, 1)
+        else
+            buttonCooldown:Hide()
+        end
+
+        local color = debuffType and DebuffTypeColor[debuffType] or DebuffTypeColor["none"]
+        buttonBorder = _G[buttonName .. "Border"]
+        buttonBorder:SetVertexColor(color.r, color.g, color.b)
+
+        if isMine == "player" then button:SetSize(20, 20); buttonBorder:SetSize(20, 20)
+        else button:SetSize(17, 17); buttonBorder:SetSize(17, 17) end
+
+        if unit == "player" then numPlayerDebuffs = numPlayerDebuffs + 1 else numTargetDebuffs = numTargetDebuffs + 1 end
+
+        button:ClearAllPoints()
+        if unit == "player" then
+            if i <= 8 then
+                button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", i * 20 + xoffset, 50)
+            elseif i <= 16 then
+                button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", (i - 8) * 20 + xoffset, 30)
+            elseif i <= 24 then
+                button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", (i - 16) * 20 + xoffset, 10)
+            end
+        else
+            if i <= 8 then
+                button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", i * 20 + xoffset, 50)
+            elseif i <= 16 then
+                button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", (i - 8) * 20 + xoffset, 30)
+            elseif i <= 24 then
+                button:SetPoint("CENTER", WarcraftyTargetFrame, "BOTTOM", (i - 16) * 20 + xoffset, 10)
+            end
+        end
+        button:Show()
+    end
 end
+
 
 
 
 function WarcraftyComboFrame_Update()
-	local comboPoints = GetComboPoints("player")
-	if ( comboPoints > 0 ) then
-		if ( not WarcraftyCombo:IsShown() ) then
-			WarcraftyCombo:Show()
-			UIFrameFadeIn(WarcraftyCombo, 0.3)
-		end
-		if ( comboPoints == 1 ) then
-			WarcraftyComboPoint1Shine:Show()
-			UIFrameFlash(WarcraftyComboPoint1Shine, 0.3, 0.4, 0.7, false, 0, 0)
-			WarcraftyComboPoint1Highlight:Show()
-		end
-		if ( comboPoints == 2 ) then
-			WarcraftyComboPoint2Shine:Show()
-			UIFrameFlash(WarcraftyComboPoint2Shine, 0.3, 0.4, 0.7, false, 0, 0)
-			WarcraftyComboPoint1Highlight:Show()
-			WarcraftyComboPoint2Highlight:Show()
-		end
-		if ( comboPoints == 3 ) then
-			WarcraftyComboPoint3Shine:Show()
-			UIFrameFlash(WarcraftyComboPoint3Shine, 0.3, 0.4, 0.7, false, 0, 0)
-			WarcraftyComboPoint1Highlight:Show()
-			WarcraftyComboPoint2Highlight:Show()
-			WarcraftyComboPoint3Highlight:Show()
-		end
-		if ( comboPoints == 4 ) then
-			WarcraftyComboPoint4Shine:Show()
-			UIFrameFlash(WarcraftyComboPoint4Shine, 0.3, 0.4, 0.7, false, 0, 0)
-			WarcraftyComboPoint1Highlight:Show()
-			WarcraftyComboPoint2Highlight:Show()
-			WarcraftyComboPoint3Highlight:Show()
-			WarcraftyComboPoint4Highlight:Show()
-		end
-		if ( comboPoints == 5 ) then
-			WarcraftyComboPoint5Shine:Show()
-			UIFrameFlash(WarcraftyComboPoint5Shine, 0.3, 0.4, 0.7, false, 0, 0)
-			WarcraftyComboPoint1Highlight:Show()
-			WarcraftyComboPoint2Highlight:Show()
-			WarcraftyComboPoint3Highlight:Show()
-			WarcraftyComboPoint4Highlight:Show()
-			WarcraftyComboPoint5Highlight:Show()
-		end
-	else
-		WarcraftyComboPoint1Highlight:Hide()
-		WarcraftyComboPoint2Highlight:Hide()
-		WarcraftyComboPoint3Highlight:Hide()
-		WarcraftyComboPoint4Highlight:Hide()
-		WarcraftyComboPoint5Highlight:Hide()
-		WarcraftyComboPoint1Shine:Hide()
-		WarcraftyComboPoint2Shine:Hide()
-		WarcraftyComboPoint3Shine:Hide()
-		WarcraftyComboPoint4Shine:Hide()
-		WarcraftyComboPoint5Shine:Hide()
-		WarcraftyCombo:Hide()
-	end
+    -- get combo points: player on target
+    local comboPoints = 0
+    if GetComboPoints then
+        comboPoints = GetComboPoints("player", "target")
+    end
+
+    if comboPoints > 0 then
+        if not WarcraftyCombo:IsShown() then
+            WarcraftyCombo:Show()
+            UIFrameFadeIn(WarcraftyCombo, 0.3)
+        end
+        if comboPoints >= 1 then
+            WarcraftyComboPoint1Shine:Show()
+            UIFrameFlash(WarcraftyComboPoint1Shine, 0.3, 0.4, 0.7, false, 0, 0)
+            WarcraftyComboPoint1Highlight:Show()
+        end
+        if comboPoints >= 2 then
+            WarcraftyComboPoint2Shine:Show()
+            UIFrameFlash(WarcraftyComboPoint2Shine, 0.3, 0.4, 0.7, false, 0, 0)
+            WarcraftyComboPoint2Highlight:Show()
+        end
+        if comboPoints >= 3 then
+            WarcraftyComboPoint3Shine:Show()
+            UIFrameFlash(WarcraftyComboPoint3Shine, 0.3, 0.4, 0.7, false, 0, 0)
+            WarcraftyComboPoint3Highlight:Show()
+        end
+        if comboPoints >= 4 then
+            WarcraftyComboPoint4Shine:Show()
+            UIFrameFlash(WarcraftyComboPoint4Shine, 0.3, 0.4, 0.7, false, 0, 0)
+            WarcraftyComboPoint4Highlight:Show()
+        end
+        if comboPoints >= 5 then
+            WarcraftyComboPoint5Shine:Show()
+            UIFrameFlash(WarcraftyComboPoint5Shine, 0.3, 0.4, 0.7, false, 0, 0)
+            WarcraftyComboPoint5Highlight:Show()
+        end
+    else
+        -- hide all combo point indicators
+        for i = 1, 5 do
+            _G["WarcraftyComboPoint"..i.."Highlight"]:Hide()
+            _G["WarcraftyComboPoint"..i.."Shine"]:Hide()
+        end
+        WarcraftyCombo:Hide()
+    end
 end
+
 
 function WarcraftySetScale()
 	WarcraftyPlayerModel:SetScale(WarcraftyConfig.scale)
@@ -1105,117 +980,177 @@ end
 
 
 function WarcraftySetMinimap()
-	MinimapBorderTop:Hide()
-	--MinimapToggleButton:Hide()
-	MinimapZoneTextButton:SetParent(Minimap)
-	MinimapZoneTextButton:ClearAllPoints()
-	MinimapZoneTextButton:SetPoint("TOP", Minimap, "TOP", 0, 0)
-	MinimapZoneTextButton:SetWidth(Minimap:GetWidth())
-	MinimapZoneText:ClearAllPoints()
-	MinimapZoneText:SetAllPoints(MinimapZoneTextButton)
+	-- Safe hide for removed frames
+	if MinimapBorderTop then MinimapBorderTop:Hide() end
+	if MinimapBorder then MinimapBorder:SetTexture('') end
+	if MiniMapWorldMapButton then MiniMapWorldMapButton:Hide() end
+	if MinimapNorthTag then MinimapNorthTag:SetAlpha(0) end
 
+	if MinimapZoneTextButton and Minimap then
+		MinimapZoneTextButton:SetParent(Minimap)
+		MinimapZoneTextButton:ClearAllPoints()
+		MinimapZoneTextButton:SetPoint("TOP", Minimap, "TOP", 0, 0)
+		MinimapZoneTextButton:SetWidth(Minimap:GetWidth())
+	end
+
+	if MinimapZoneText then
+		MinimapZoneText:ClearAllPoints()
+		MinimapZoneText:SetAllPoints(MinimapZoneTextButton)
+	end
+
+	-- Adjust minimap and related buttons
 	Minimap:SetScale(1.25)
-	GameTimeFrame:SetScale(.8)
-	MinimapZoomIn:SetScale(.8)
-	MinimapZoomOut:SetScale(.8)
-	MiniMapTracking:SetScale(.8)
-	QueueStatusMinimapButton:SetScale(.8)
-	MiniMapMailFrame:SetScale(.8)
-	
-	MinimapZoomIn:ClearAllPoints()
-	MinimapZoomOut:ClearAllPoints()
-	MinimapZoomIn:SetPoint("BOTTOM", WarcraftyPlayerFrame, "BOTTOM", -467, 40)
-	MinimapZoomOut:SetPoint("BOTTOM", WarcraftyPlayerFrame, "BOTTOM", -467, 5)
-	
-	MiniMapTracking:ClearAllPoints()
-	MiniMapTracking:SetPoint("BOTTOM", WarcraftyPlayerFrame, "BOTTOM", -466, 113)
-	
-	MiniMapWorldMapButton:Hide()
-	
-	MinimapNorthTag:SetAlpha(0)
-	
-	GameTimeFrame:ClearAllPoints()
-	GameTimeFrame:SetPoint("BOTTOM", WarcraftyPlayerFrame, "BOTTOM", -466, 145)
-	
-	QueueStatusMinimapButton:ClearAllPoints()
-	QueueStatusMinimapButton:SetPoint("BOTTOM", WarcraftyPlayerFrame, "BOTTOM", -465, 85)
-	
-	MiniMapMailFrame:ClearAllPoints()
-	MiniMapMailFrame:SetPoint("BOTTOM", WarcraftyPlayerFrame, "BOTTOM", -498, 159)
-	
-	TimeManager_LoadUI()
-	TimeManagerClockButton:ClearAllPoints()
-	TimeManagerClockButton:SetPoint("BOTTOM", Minimap, "BOTTOM", 0, -5)
-	TimeManagerClockButton:GetRegions():Hide()
-	TimeManagerClockButton:Show()
-	
-	Minimap:SetMaskTexture([=[Interface\ChatFrame\ChatFrameBackground]=])
-	MinimapBorder:SetTexture('')
-	Minimap:ClearAllPoints()
-	Minimap:SetPoint("BOTTOM", WarcraftyPlayerFrame, "BOTTOM", -463, 7)
 	Minimap:SetWidth(140)
 	Minimap:SetHeight(140)
+	Minimap:SetMaskTexture("Interface\\ChatFrame\\ChatFrameBackground")
 	Minimap:SetFrameLevel(3)
 	Minimap:SetFrameStrata("BACKGROUND")
-	
-	Minimap:SetParent("WarcraftyPlayerFrame")
-	MinimapCluster:Hide()
+	Minimap:ClearAllPoints()
+	Minimap:SetPoint("BOTTOM", WarcraftyPlayerFrame, "BOTTOM", -463, 7)
+	Minimap:SetParent(WarcraftyPlayerFrame)
+
+	-- Scale and position minimap elements
+	if GameTimeFrame then
+		GameTimeFrame:SetScale(0.8)
+		GameTimeFrame:ClearAllPoints()
+		GameTimeFrame:SetPoint("BOTTOM", WarcraftyPlayerFrame, "BOTTOM", -466, 145)
+	end
+
+	if MinimapZoomIn and MinimapZoomOut then
+		MinimapZoomIn:SetScale(0.8)
+		MinimapZoomOut:SetScale(0.8)
+		MinimapZoomIn:ClearAllPoints()
+		MinimapZoomIn:SetPoint("BOTTOM", WarcraftyPlayerFrame, "BOTTOM", -467, 40)
+		MinimapZoomOut:ClearAllPoints()
+		MinimapZoomOut:SetPoint("BOTTOM", WarcraftyPlayerFrame, "BOTTOM", -467, 5)
+	end
+
+	if MiniMapTracking then
+		MiniMapTracking:SetScale(0.8)
+		MiniMapTracking:ClearAllPoints()
+		MiniMapTracking:SetPoint("BOTTOM", WarcraftyPlayerFrame, "BOTTOM", -466, 113)
+	end
+
+	if QueueStatusMinimapButton then
+		QueueStatusMinimapButton:SetScale(0.8)
+		QueueStatusMinimapButton:ClearAllPoints()
+		QueueStatusMinimapButton:SetPoint("BOTTOM", WarcraftyPlayerFrame, "BOTTOM", -465, 85)
+	end
+
+	if MiniMapMailFrame then
+		MiniMapMailFrame:SetScale(0.8)
+		MiniMapMailFrame:ClearAllPoints()
+		MiniMapMailFrame:SetPoint("BOTTOM", WarcraftyPlayerFrame, "BOTTOM", -498, 159)
+	end
+
+	-- Time manager clock
+		if not C_AddOns.IsAddOnLoaded("Blizzard_TimeManager") then
+		C_AddOns.LoadAddOn("Blizzard_TimeManager")
+	end
+	if TimeManagerClockButton then
+		TimeManagerClockButton:ClearAllPoints()
+		TimeManagerClockButton:SetPoint("BOTTOM", Minimap, "BOTTOM", 0, -5)
+		local region = TimeManagerClockButton:GetRegions()
+		if region then region:Hide() end
+		TimeManagerClockButton:Show()
+	end
+
+	-- Hide cluster
+	if MinimapCluster then
+		MinimapCluster:Hide()
+	end
 end
 
-function Warcrafty_Spellbar_OnLoad (self)
-	self:RegisterEvent("PLAYER_TARGET_CHANGED");
 
-	local name = self:GetName();
-	
-	if (name == "WarcraftyPlayerFrameSpellBar") then
-		CastingBarFrame_OnLoad(self, "player", true);
-	elseif (name == "WarcraftyTargetFrameSpellBar") then
-		CastingBarFrame_OnLoad(self, "target", true);
-	end
+function Warcrafty_Spellbar_OnLoad(self)
+    -- always watch for target‐changed
+    self:RegisterEvent("PLAYER_TARGET_CHANGED")
 
-	local barIcon =_G[name.."Icon"];
-	barIcon:Show();
-	barIcon:SetWidth(20)
-	barIcon:SetHeight(20)
-	barIcon:ClearAllPoints()
-	barIcon:SetPoint("RIGHT", _G[name], "LEFT", -2, 0)
+    -- Determine which unit this spellbar belongs to
+    local name = self:GetName()
+    local unit
+    if name == "WarcraftyPlayerFrameSpellBar" then
+        unit = "player"
+    elseif name == "WarcraftyTargetFrameSpellBar" then
+        unit = "target"
+    end
 
-	local frameText = _G[name.."Text"];
-	if ( frameText ) then
-		frameText:SetFontObject(SystemFont_Shadow_Small);
-		frameText:ClearAllPoints();
-		frameText:SetPoint("CENTER", _G[name], "CENTER", 0, 0);
-	end
+    if unit then
+        -- store unit on the frame for event handling
+        self.unit = unit
+        if CastingBarFrame_OnLoad then
+            -- use Blizzard’s default loader if present
+            CastingBarFrame_OnLoad(self, unit, true)
+        else
+            -- fallback: register core spellcast events manually
+            local events = {
+                "UNIT_SPELLCAST_START",
+                "UNIT_SPELLCAST_STOP",
+                "UNIT_SPELLCAST_FAILED",
+                "UNIT_SPELLCAST_INTERRUPTED",
+                "UNIT_SPELLCAST_DELAYED",
+                "UNIT_SPELLCAST_CHANNEL_START",
+                "UNIT_SPELLCAST_CHANNEL_UPDATE",
+                "UNIT_SPELLCAST_CHANNEL_STOP",
+            }
+            for _, evt in ipairs(events) do
+                self:RegisterUnitEvent(evt, unit)
+            end
+        end
+    end
 
-	local frameBorder = _G[name.."Border"];
-	if ( frameBorder ) then
-		frameBorder:SetTexture("Interface\\CastingBar\\UI-CastingBar-Border-Small");
-		frameBorder:SetWidth(188);
-		frameBorder:SetHeight(70);
-		frameBorder:ClearAllPoints();
-		frameBorder:SetPoint("CENTER", _G[name], "CENTER", 0, 0);
-	end
+    -- Icon
+    local barIcon = _G[name .. "Icon"]
+    if barIcon then
+        barIcon:Show()
+        barIcon:SetWidth(20)
+        barIcon:SetHeight(20)
+        barIcon:ClearAllPoints()
+        barIcon:SetPoint("RIGHT", _G[name], "LEFT", -2, 0)
+    end
 
-	local frameFlash = _G[name.."Flash"];
-	if ( frameFlash ) then
-		frameFlash:SetTexture("Interface\\CastingBar\\UI-CastingBar-Flash-Small");
-		frameFlash:SetWidth(188);
-		frameFlash:SetHeight(70);
-		frameFlash:ClearAllPoints();
-		frameFlash:SetPoint("CENTER", _G[name], "CENTER", 0, 0);
-	end
-	
-	local frameSpark = _G[name.."Spark"];
-	if ( frameSpark ) then
-		frameSpark:SetTexture("Interface\CastingBar\UI-CastingBar-Spark");
-		frameSpark:SetWidth(60);
-		frameSpark:SetHeight(60);
-		frameSpark:ClearAllPoints();
-		frameSpark:SetPoint("BOTTOM", _G[name], "BOTTOM", 0, -22);
-	end
-	_G[name.."Text"]:SetWidth(140)
+    -- Cast time text
+    local frameText = _G[name .. "Text"]
+    if frameText then
+        frameText:SetFontObject(SystemFont_Shadow_Small)
+        frameText:ClearAllPoints()
+        frameText:SetPoint("CENTER", _G[name], "CENTER", 0, 0)
+        frameText:SetWidth(140)
+    end
 
+    -- Border
+    local frameBorder = _G[name .. "Border"]
+    if frameBorder then
+        frameBorder:SetTexture("Interface\\CastingBar\\UI-CastingBar-Border-Small")
+        frameBorder:SetWidth(188)
+        frameBorder:SetHeight(70)
+        frameBorder:ClearAllPoints()
+        frameBorder:SetPoint("CENTER", _G[name], "CENTER", 0, 0)
+    end
+
+    -- Flash effect
+    local frameFlash = _G[name .. "Flash"]
+    if frameFlash then
+        frameFlash:SetTexture("Interface\\CastingBar\\UI-CastingBar-Flash-Small")
+        frameFlash:SetWidth(188)
+        frameFlash:SetHeight(70)
+        frameFlash:ClearAllPoints()
+        frameFlash:SetPoint("CENTER", _G[name], "CENTER", 0, 0)
+    end
+
+    -- Spark effect
+    local frameSpark = _G[name .. "Spark"]
+    if frameSpark then
+        frameSpark:SetTexture("Interface\\CastingBar\\UI-CastingBar-Spark")
+        frameSpark:SetWidth(60)
+        frameSpark:SetHeight(60)
+        frameSpark:ClearAllPoints()
+        frameSpark:SetPoint("BOTTOM", _G[name], "BOTTOM", 0, -22)
+    end
 end
+
+
+
 
 function Warcrafty_Spellbar_OnEvent (self, event, ...)
 	local arg1 = ...
@@ -1246,6 +1181,34 @@ function Warcrafty_Spellbar_OnEvent (self, event, ...)
 		CastingBarFrame_OnEvent(self, event, arg1, select(2, ...));
 	end
 end
+
+function Warcrafty_AddPanelOptions()
+    local WarcraftyOptions = CreateFrame("Frame", "WarcraftyOptions", UIParent)
+    WarcraftyOptions.name = "Warcrafty"
+
+    -- Create tabs
+    local WarcraftyOptionsTab1 = Warcrafty_CreateTab(WarcraftyOptions, "Tab1", "Global Settings")
+    WarcraftyOptionsTab1:SetPoint("TOPLEFT", 10, -2)
+    local WarcraftyOptionsTab2 = Warcrafty_CreateTab(WarcraftyOptions, "Tab2", "Character Settings")
+    WarcraftyOptionsTab2:SetPoint("TOPLEFT", 125, -2)
+
+    -- Create tab pages
+    local WarcraftyOptionsTab1Page = CreateFrame("Frame", "WarcraftyOptionsTab1Page", WarcraftyOptionsTab1)
+    local WarcraftyOptionsTab2Page = CreateFrame("Frame", "WarcraftyOptionsTab2Page", WarcraftyOptionsTab2)
+
+    -- Create the frame using the template from XML
+    local frame = CreateFrame("Frame", "WarcraftyOptionFrameBoxTemplate", UIParent, "WarcraftyOptionFrameBoxTemplate")
+    frame:SetSize(400, 200)  -- Set desired size
+    frame:SetPoint("CENTER")  -- Set desired position
+
+    -- Add other components and logic as needed (e.g., tabs, buttons, etc.)
+    -- You can now use the created frame and other UI elements
+
+    -- Final setup for the Warcrafty options panel
+    PanelTemplates_SetNumTabs(WarcraftyOptions, 2)
+    PanelTemplates_SetTab(WarcraftyOptions, WarcraftyOptionsTab1)
+end
+
 
 
 function WarcraftyTempEnchantOnEvent()
@@ -1309,315 +1272,76 @@ end
 
 
 function WarcraftySetBars()
-	--TEMP CODE UNTIL I MAKE NEW ACTION BARS
-	
-	local WarcraftyExitButton = CreateFrame("Frame","ExitButtonHolder",WarcraftyBarFrame)
-	WarcraftyExitButton:SetWidth(70)
-	WarcraftyExitButton:SetHeight(70)
+	if not WarcraftyBarFrame then return end
 
-	WarcraftyExitButton:SetPoint("BOTTOM",385,155) 
-	  
-	local veb = CreateFrame("BUTTON", "Warcrafty_VehicleExitButton", WarcraftyExitButton, "SecureActionButtonTemplate");
-	veb:SetWidth(50)
-	veb:SetHeight(50)
-	veb:SetPoint("CENTER",0,0)
+	local WarcraftyExitButton = CreateFrame("Frame", "ExitButtonHolder", WarcraftyBarFrame)
+	WarcraftyExitButton:SetSize(70, 70)
+	WarcraftyExitButton:SetPoint("BOTTOM", 385, 155)
+
+	local veb = CreateFrame("BUTTON", "Warcrafty_VehicleExitButton", WarcraftyExitButton, "SecureActionButtonTemplate")
+	veb:SetSize(50, 50)
+	veb:SetPoint("CENTER", 0, 0)
 	veb:RegisterForClicks("AnyUp")
 	veb:SetNormalTexture("Interface\\Vehicles\\UI-Vehicles-Button-Exit-Up")
 	veb:SetPushedTexture("Interface\\Vehicles\\UI-Vehicles-Button-Exit-Down")
 	veb:SetHighlightTexture("Interface\\Vehicles\\UI-Vehicles-Button-Exit-Down")
-	veb:SetScript("OnClick", function(self) VehicleExit() end)
+	veb:SetScript("OnClick", function() VehicleExit() end)
+	veb:SetAlpha(0)
+
 	veb:RegisterEvent("UNIT_ENTERING_VEHICLE")
 	veb:RegisterEvent("UNIT_ENTERED_VEHICLE")
 	veb:RegisterEvent("UNIT_EXITING_VEHICLE")
 	veb:RegisterEvent("UNIT_EXITED_VEHICLE")
-	veb:SetScript("OnEvent", function(self,event,...)
-	local arg1 = ...;
-		if(((event=="UNIT_ENTERING_VEHICLE") or (event=="UNIT_ENTERED_VEHICLE")) and arg1 == "player") then
-			veb:SetAlpha(1)
-		elseif(((event=="UNIT_EXITING_VEHICLE") or (event=="UNIT_EXITED_VEHICLE")) and arg1 == "player") then
-			veb:SetAlpha(0)
+	veb:SetScript("OnEvent", function(self, event, arg1)
+		if arg1 == "player" then
+			if event == "UNIT_ENTERING_VEHICLE" or event == "UNIT_ENTERED_VEHICLE" then
+				self:SetAlpha(1)
+			elseif event == "UNIT_EXITING_VEHICLE" or event == "UNIT_EXITED_VEHICLE" then
+				self:SetAlpha(0)
+			end
 		end
-	end)  
-	veb:SetAlpha(0)
- 
+	end)
 
-	local i,f
-
-	for i=1, 12 do
-		_G["ActionButton"..i]:SetParent("WarcraftyBarFrame");
-		_G["ActionButton"..i.."NormalTexture"]:SetTexCoord(0,0,0,0)
-		_G["ActionButton"..i.."Icon"]:SetTexCoord(.1,.9,.1,.9)
-		_G["BonusActionButton"..i.."NormalTexture"]:SetTexCoord(0,0,0,0)
-		_G["BonusActionButton"..i.."Icon"]:SetTexCoord(.1,.9,.1,.9)
-		_G["MultiBarBottomRightButton"..i.."NormalTexture"]:SetTexCoord(0,0,0,0)
-		_G["MultiBarBottomRightButton"..i.."Icon"]:SetTexCoord(.1,.9,.1,.9)
-		_G["MultiBarBottomLeftButton"..i.."NormalTexture"]:SetTexCoord(0,0,0,0)
-		_G["MultiBarBottomLeftButton"..i.."Icon"]:SetTexCoord(.1,.9,.1,.9)
-	end
-	BonusActionBarFrame:SetParent("WarcraftyBarFrame")
-	BonusActionBarFrame:SetWidth(0)
-	BonusActionBarTexture0:Hide()
-	BonusActionBarTexture1:Hide()
-	
-
-	
-	if (WarcraftyConfigPerChar.bars == 1) then
-		ActionButton1:ClearAllPoints()
-		ActionButton1:SetPoint("BOTTOM","WarcraftyBarFrame","BOTTOM",355,91);   
-		ActionButton5:ClearAllPoints()
-		ActionButton5:SetPoint("TOP","ActionButton1","BOTTOM",0,-6);
-		ActionButton9:ClearAllPoints()
-		ActionButton9:SetPoint("TOP","ActionButton5","BOTTOM",0,-6);
-		ActionButton7:ClearAllPoints()
-		ActionButton7:SetPoint("LEFT","ActionButton6","RIGHT",6,0);
-		for i=1, 12 do
-			_G["ActionButton"..i]:SetScale(1.325)
-		end	
-		
-		BonusActionButton1:ClearAllPoints()
-		BonusActionButton1:SetPoint("BOTTOM","WarcraftyBarFrame","BOTTOM",355,91);   
-		BonusActionButton5:ClearAllPoints()
-		BonusActionButton5:SetPoint("TOP","BonusActionButton1","BOTTOM",0,-6);
-		BonusActionButton9:ClearAllPoints()
-		BonusActionButton9:SetPoint("TOP","BonusActionButton5","BOTTOM",0,-6);
-		BonusActionButton7:ClearAllPoints()
-		BonusActionButton7:SetPoint("LEFT","BonusActionButton6","RIGHT",6,0);
-		BonusActionBarFrame:SetScale(1.325)
-	else
-		ActionButton1:ClearAllPoints()
-		ActionButton1:SetPoint("BOTTOM","WarcraftyBarFrame","BOTTOM",525,52);   
-		ActionButton7:ClearAllPoints()
-		ActionButton7:SetPoint("TOP","ActionButton1","BOTTOM",0,-6);
-		ActionButton5:ClearAllPoints()
-		ActionButton5:SetPoint("LEFT","ActionButton4","RIGHT",6,0);
-		ActionButton9:ClearAllPoints()
-		ActionButton9:SetPoint("LEFT","ActionButton8","RIGHT",6,0);
-		for i=1, 12 do
-			_G["ActionButton"..i]:SetScale(.88)
-		end	
-		
-		BonusActionButton1:ClearAllPoints()
-		BonusActionButton1:SetPoint("BOTTOM","WarcraftyBarFrame","BOTTOM",525,52);   
-		BonusActionButton7:ClearAllPoints()
-		BonusActionButton7:SetPoint("TOP","BonusActionButton1","BOTTOM",0,-6);
-		BonusActionButton5:ClearAllPoints()
-		BonusActionButton5:SetPoint("LEFT","BonusActionButton4","RIGHT",6,0);
-		BonusActionButton9:ClearAllPoints()
-		BonusActionButton9:SetPoint("LEFT","BonusActionButton8","RIGHT",6,0);
-		BonusActionBarFrame:SetScale(.88)
-	end
-	
-
-	ShapeshiftBarFrame:SetParent("WarcraftyBarFrame")
-	MultiCastActionBarFrame:SetParent("WarcraftyBarFrame")
-	ShapeshiftBarFrame:SetWidth(0)
-	ShapeshiftBarLeft:SetAlpha(0)
-	ShapeshiftBarMiddle:SetAlpha(0)
-	ShapeshiftBarRight:SetAlpha(0)
-	local function rABS_MoveShapeshift()
-		ShapeshiftButton1NormalTexture:SetAlpha(0)
-		ShapeshiftButton2NormalTexture:SetAlpha(0)
-		ShapeshiftButton3NormalTexture:SetAlpha(0)
-		ShapeshiftButton4NormalTexture:SetAlpha(0)
-		ShapeshiftButton5NormalTexture:SetAlpha(0)
-		ShapeshiftButton6NormalTexture:SetAlpha(0)
-		ShapeshiftButton7NormalTexture:SetAlpha(0)
-		ShapeshiftButton1:ClearAllPoints()
-		MultiCastActionBarFrame:ClearAllPoints()
-		if (WarcraftyConfigPerChar.bars == 1) then
-			ShapeshiftButton1:SetPoint("BOTTOM","WarcraftyBarFrame","BOTTOM",440,190)
-			MultiCastActionBarFrame:SetPoint("BOTTOMLEFT","WarcraftyBarFrame","BOTTOM",440,190)
-		elseif (WarcraftyConfigPerChar.bars == 2) then
-			ShapeshiftButton1:SetPoint("BOTTOM","WarcraftyBarFrame","BOTTOM",440,170)
-			MultiCastActionBarFrame:SetPoint("BOTTOMLEFT","WarcraftyBarFrame","BOTTOM",440,170)
-		else
-			ShapeshiftButton1:SetPoint("BOTTOM","WarcraftyBarFrame","BOTTOM",440,245)
-			MultiCastActionBarFrame:SetPoint("BOTTOMLEFT","WarcraftyBarFrame","BOTTOM",440,245)
+	-- Update action buttons without setting unsafe parents
+	for i = 1, 12 do
+		local actionButton = _G["ActionButton" .. i]
+		if actionButton and WarcraftyBarFrame then
+			actionButton:SetScale(1.325)
 		end
 	end
-	hooksecurefunc("ShapeshiftBar_Update", rABS_MoveShapeshift);  
-	rABS_MoveShapeshift()
 
-	PossessBarFrame:SetParent("WarcraftyBarFrame")
-	PossessBackground1:SetAlpha(0)
-	PossessBackground2:SetAlpha(0)
-	PossessButton1:ClearAllPoints()
-	if (WarcraftyConfigPerChar.bars == 1) then
-		PossessButton1:SetPoint("BOTTOM","WarcraftyBarFrame","BOTTOM",440,190)
-	elseif (WarcraftyConfigPerChar.bars == 2) then
-		PossessButton1:SetPoint("BOTTOM","WarcraftyBarFrame","BOTTOM",440,170)
-	else
-		PossessButton1:SetPoint("BOTTOM","WarcraftyBarFrame","BOTTOM",440,245)
-	end
-	
-	local showBar1, showBar2 = GetActionBarToggles()
-
-	if ((showBar1 == nil) and (showBar2 ~= nil)) then
-
-		MultiBarBottomRight:SetParent("WarcraftyBarFrame")
-		MultiBarBottomRightButton1:ClearAllPoints()
-		MultiBarBottomRightButton1:SetPoint("BOTTOM", "WarcraftyBarFrame", "BOTTOM", 525,136);
-		MultiBarBottomRightButton7:ClearAllPoints()
-		MultiBarBottomRightButton7:SetPoint("TOP","MultiBarBottomRightButton1","BOTTOM",0,-6);
-		MultiBarBottomRight:SetScale(.88)
-	else
-
-		MultiBarBottomLeft:SetParent("WarcraftyBarFrame")
-		MultiBarBottomLeftButton1:ClearAllPoints()
-		MultiBarBottomLeftButton1:SetPoint("BOTTOM", "WarcraftyBarFrame", "BOTTOM", 525, 136);
-		MultiBarBottomLeftButton7:ClearAllPoints()
-		MultiBarBottomLeftButton7:SetPoint("TOP","MultiBarBottomLeftButton1","BOTTOM",0,-6);
-		MultiBarBottomLeft:SetScale(.88)
-			
-
-		MultiBarBottomRight:SetParent("WarcraftyBarFrame")
-		MultiBarBottomRightButton1:ClearAllPoints()
-		MultiBarBottomRightButton1:SetPoint("BOTTOM", "WarcraftyBarFrame", "BOTTOM", 525, 220);
-		MultiBarBottomRightButton7:ClearAllPoints()
-		MultiBarBottomRightButton7:SetPoint("TOP","MultiBarBottomRightButton1","BOTTOM",0,-6);
-		MultiBarBottomRight:SetScale(.88)
+	if BonusActionBarFrame and WarcraftyBarFrame then
+		BonusActionBarFrame:SetParent(WarcraftyBarFrame)
+		BonusActionBarFrame:SetWidth(0)
+		BonusActionBarFrame:SetShown(WarcraftyConfigPerChar.bars == 1)
+		if BonusActionBarTexture0 then BonusActionBarTexture0:Hide() end
+		if BonusActionBarTexture1 then BonusActionBarTexture1:Hide() end
 	end
 
-	
-  --right bars
-  
-	local RightBarHolder = CreateFrame("Frame","WarcraftyRightBarHolder",UIParent)
-	RightBarHolder:SetWidth(100) -- size the width here
-	RightBarHolder:SetHeight(518) -- size the height here
-	RightBarHolder:SetPoint("RIGHT",0,0) 
-	MultiBarRight:SetParent(RightBarHolder);
-	MultiBarLeft:SetParent(RightBarHolder);
-	MultiBarRight:ClearAllPoints()
-	MultiBarRight:SetPoint("TOPRIGHT",-10,-10)
-	MultiBarRight:SetScale(.75)
-	MultiBarLeft:SetScale(.75)
-	
-  --bags
-	local BagButtons = {
-		MainMenuBarBackpackButton,
-		CharacterBag0Slot,
-		CharacterBag1Slot,
-		CharacterBag2Slot,
-		CharacterBag3Slot,
-		KeyRingButton,
-	}  
-	local function WarcraftySetBag()
-		for _, f in pairs(BagButtons) do
-			f:SetParent("WarcraftyBarFrame");
-		end
-		MainMenuBarBackpackButton:ClearAllPoints();
-		MainMenuBarBackpackButton:SetPoint("BOTTOM", "WarcraftyBarFrame", "BOTTOM", 337, 105);
-		CharacterBag0Slot:ClearAllPoints();
-		CharacterBag0Slot:SetPoint("LEFT", "MainMenuBarBackpackButton", "RIGHT", 9, 0);
-		CharacterBag0Slot:SetScale(1.28);
-		CharacterBag1Slot:ClearAllPoints();
-		CharacterBag1Slot:SetPoint("TOP", "MainMenuBarBackpackButton", "BOTTOM", 0, -9);
-		CharacterBag1Slot:SetScale(1.28);
-		CharacterBag2Slot:ClearAllPoints();
-		CharacterBag2Slot:SetPoint("LEFT", "CharacterBag1Slot", "RIGHT", 9, 0);
-		CharacterBag2Slot:SetScale(1.28);
-		CharacterBag3Slot:ClearAllPoints();
-		CharacterBag3Slot:SetPoint("TOP", "CharacterBag1Slot", "BOTTOM", 0, -9);
-		CharacterBag3Slot:SetScale(1.28);
-		KeyRingButton:ClearAllPoints();
-		KeyRingButton:SetPoint("LEFT", "CharacterBag3Slot", "RIGHT", 9, 0);
-
-	end  
-	WarcraftySetBag();  
-		-- KeyRingButtonNormalTexture:SetTexture('Interface\\ContainerFrame\\KeyRing-Bag-Icon')
-		-- KeyRingButtonNormalTexture:SetTexCoord(0, 0.9, 0.1, 1)
-  
-  --mircro menu
-	local MicroButtons = {
-		CharacterMicroButton,
-		SpellbookMicroButton,
-		TalentMicroButton,
-		AchievementMicroButton,
-		QuestLogMicroButton,
-		SocialsMicroButton,
-		PVPMicroButton,
-		LFDMicroButton,
-		MainMenuMicroButton,
-		HelpMicroButton,
-	}  
-	local function Warcrafty_MoveMicroButtons(skinName)
-		for _, f in pairs(MicroButtons) do
-		  f:SetParent("WarcraftyBarFrame");
-		end
-		CharacterMicroButton:ClearAllPoints();
-		CharacterMicroButton:SetPoint("TOPLEFT", "UIParent", "TOPLEFT", 0, 20);
-		--SocialsMicroButton:ClearAllPoints();
-		--SocialsMicroButton:SetPoint("LEFT", QuestLogMicroButton, "RIGHT", -3, 0);
-		UpdateMicroButtons();
+	-- Remove hook to ShapeshiftBar_Update (no longer exists)
+	-- Replaced with a basic frame alignment (placeholder)
+	if ShapeshiftBarFrame and MultiCastActionBarFrame then
+		ShapeshiftBarFrame:SetParent(WarcraftyBarFrame)
+		MultiCastActionBarFrame:SetParent(WarcraftyBarFrame)
 	end
-	hooksecurefunc("VehicleMenuBar_MoveMicroButtons", Warcrafty_MoveMicroButtons);  
-	Warcrafty_MoveMicroButtons();
-
-	PetActionBarFrame:SetParent("WarcraftyBarFrame")
-	PetActionBarFrame:SetWidth(0)
-	PetActionButton1:ClearAllPoints()
-	PetActionButton1:SetPoint("BOTTOM","WarcraftyBarFrame","BOTTOM",-520,130)
-	PetActionButton4:ClearAllPoints()
-	PetActionButton4:SetPoint("TOP","PetActionButton1","BOTTOM",-20,-10)
-	PetActionButton8:ClearAllPoints()
-	PetActionButton8:SetPoint("TOP","PetActionButton4","BOTTOM",20,-10)
-	PetActionBarFrame:SetScale(.75)
-	SlidingActionBarTexture0:SetTexture("")
-	SlidingActionBarTexture1:SetTexture("")
-
-	local function Warcrafty_showhideactionbuttons(alpha)
-		local f = "ActionButton"
-		for i=1, 12 do
-			_G[f..i]:SetAlpha(alpha)
-		end
-	end
-	BonusActionBarFrame:HookScript("OnShow", function(self) Warcrafty_showhideactionbuttons(0) end)
-	BonusActionBarFrame:HookScript("OnHide", function(self) Warcrafty_showhideactionbuttons(1) end)
-	if BonusActionBarFrame:IsShown() then
-		Warcrafty_showhideactionbuttons(0)
-	end
-
-	MainMenuBar:SetScale(0.001)
-	MainMenuBar:SetAlpha(0)
-	VehicleMenuBar:SetScale(0.001)
-	VehicleMenuBar:SetAlpha(0)
-
 end
 
+
+
+-- Track last known number of bars
 lastBars = 0
 function WarcraftyActionbarOnUpdate()
+	if not WarcraftyBarFrame or not WarcraftyBarFrame:IsShown() then return end
+
 	local showBar1, showBar2, showBar3, showBar4 = GetActionBarToggles()
 	local bars = 1
-	if (showBar1 ~= nil) then
-		bars = bars + 1
-	else
-		showBar1 = 0
-	end
-	if (showBar2 ~= nil) then
-		bars = bars + 1
-	else
-		showBar2 = 0
-	end
-	if (showBar3 ~= nil) then
-		bars = bars + 1
-	end
-	if (showBar4 ~= nil) then
-		bars = bars + 1
-	end
-	if (bars ~= lastBars) then
-		if showBar1 then
-			bars = bars + 1
-			showBar1 = 1
-	else
-			showBar1 = 0
-	end
-	if showBar2 then
-			bars = bars + 1
-			showBar2 = 1
-	else
-			showBar2 = 0
-	end
-		WarcraftyConfigPerChar.bars = showBar1 + showBar2 + 1
+	if showBar1 then bars = bars + 1 end
+	if showBar2 then bars = bars + 1 end
+	if showBar3 then bars = bars + 1 end
+	if showBar4 then bars = bars + 1 end
+
+	if bars ~= lastBars then
+		WarcraftyConfigPerChar.bars = (showBar1 and 1 or 0) + (showBar2 and 1 or 0) + 1
 		WarcraftySetBars()
 		WarcraftySetSkin(WarcraftyConfigPerChar.skin)
 	end
@@ -1635,15 +1359,75 @@ function WarcraftyABTest()
 
 end
 
-TemporaryEnchantFrame:Hide()
-TemporaryEnchantFrame:UnregisterAllEvents()
-CastingBarFrame:Hide()
-CastingBarFrame:UnregisterAllEvents()
-PlayerFrame:Hide()
-PlayerFrame:UnregisterAllEvents()
-ComboFrame:Hide()
-ComboFrame:UnregisterAllEvents()
-TargetFrame:Hide()
-TargetFrame:UnregisterAllEvents()
-BuffFrame:Hide()
-BuffFrame:UnregisterAllEvents()
+-- Manually initialize the temporary enchant buttons (since we removed Blizzard's handler)
+function WarcraftyTempEnchantButton_OnLoad(self)
+    -- Register any events you need, like PLAYER_ENTERING_WORLD, UNIT_INVENTORY_CHANGED, etc.
+    self:RegisterEvent("PLAYER_ENTERING_WORLD")
+    -- Add any other initialization here, like updating textures or cooldowns
+end
+
+-- Handle the events for the temp enchant button
+function WarcraftyTempEnchant_OnEvent(self, event, ...)
+    if event == "PLAYER_ENTERING_WORLD" then
+        -- Logic for setting up or hiding the temporary enchant buttons
+        self:Hide()  -- or do other initializations if needed
+    elseif event == "UNIT_INVENTORY_CHANGED" then
+        -- Update logic when the player's inventory changes (e.g., when temporary enchants expire)
+        -- self:Show() or update the enchant icon/cooldown here
+    end
+end
+
+-- This is where you set the backdrop for your frame
+local function setBackdrop(frame)
+    frame:SetBackdrop({
+        bgFile = "Interface\\Tooltips\\UI-Tooltip-Background",  -- Background texture
+        edgeFile = "Interface\\Tooltips\\UI-Tooltip-Border",  -- Border texture
+        tile = true,
+        edgeSize = 16,  -- Border size
+        tileSize = 16,  -- Tile size
+        insets = {left = 5, right = 5, top = 5, bottom = 5}  -- Insets for background padding
+    })
+
+    -- You can also set the border and background colors here
+    frame:SetBackdropBorderColor(0.4, 0.4, 0.4)  -- Border color
+    frame:SetBackdropColor(0.5, 0.5, 0.5)  -- Background color
+end
+
+
+-- Set tex coords for the status bar textures (Player Health Bar and Power Bar)
+local healthBar = WarcraftyPlayerHealthBar  -- The status bar object
+local texture = healthBar:GetStatusBarTexture()  -- Get the texture
+
+-- Set the texCoords for the texture
+texture:SetTexCoord(0, 1, 0, 1)  -- You can adjust the coordinates as needed
+
+local powerBarTexture = WarcraftyPlayerPowerBar:GetStatusBarTexture()  -- Get the power bar texture
+powerBarTexture:SetTexCoord(0, 1, 0, 1)  -- Set texture coordinates (you can adjust these values)
+
+
+
+
+if TemporaryEnchantFrame then
+    TemporaryEnchantFrame:Hide()
+    TemporaryEnchantFrame:UnregisterAllEvents()
+end
+if CastingBarFrame then
+    CastingBarFrame:Hide()
+    CastingBarFrame:UnregisterAllEvents()
+end
+if PlayerFrame and PlayerFrame:IsShown() then
+    PlayerFrame:Hide()
+    PlayerFrame:UnregisterAllEvents()
+end
+if ComboFrame then
+    ComboFrame:Hide()
+    ComboFrame:UnregisterAllEvents()
+end
+if TargetFrame then
+    TargetFrame:Hide()
+    TargetFrame:UnregisterAllEvents()
+end
+if BuffFrame then
+    BuffFrame:Hide()
+    BuffFrame:UnregisterAllEvents()
+end

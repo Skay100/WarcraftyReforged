@@ -1,10 +1,29 @@
-local function Warcrafty_CreatePanel(parent,name,hidetext)
-	local panel = CreateFrame('Frame', parent:GetName() .. name, parent, 'WarcraftyOptionFrameBoxTemplate')
-	panel:SetBackdropBorderColor(0.4, 0.4, 0.4)
-	panel:SetBackdropColor(0.15, 0.15, 0.15, 0.5)
-	if hidetext then else _G[panel:GetName() .. 'Title']:SetText(name) end
+local function Warcrafty_CreatePanel(parent, name, hidetext)
+    local panel = CreateFrame("Frame", nil, UIParent)
+    panel.name = name
 
-	return panel
+    local title = panel:CreateFontString(nil, "ARTWORK", "GameFontNormalLarge")
+    title:SetPoint("TOPLEFT", 16, -16)
+    title:SetText(name)
+
+    -- If BackdropTemplate is available, apply backdrop
+    if BackdropTemplateMixin then
+        Mixin(panel, BackdropTemplateMixin)
+        panel:SetBackdrop({
+            bgFile = "Interface\\DialogFrame\\UI-DialogBox-Background",
+            edgeFile = "Interface\\DialogFrame\\UI-DialogBox-Border",
+            tile = true, tileSize = 32, edgeSize = 32,
+            insets = { left = 11, right = 12, top = 12, bottom = 11 }
+        })
+        panel:SetBackdropBorderColor(0.4, 0.4, 0.4)
+        panel:SetBackdropColor(0.15, 0.15, 0.15, 0.5)
+    end
+
+    if not hidetext then
+        title:SetText(name)
+    end
+
+    return panel
 end
 
 local function Warcrafty_CreateSlider (text, parent, low, high, step)
@@ -34,10 +53,23 @@ local function Warcrafty_CreateEditBox(name,parent,width,height)
 end
 
 local function Warcrafty_CreateCheckButton(name, parent)
-	local checkbutton = CreateFrame('CheckButton', parent:GetName() .. name, parent, 'OptionsCheckButtonTemplate')
-	_G[checkbutton:GetName() .. 'Text']:SetText(name)
+    -- Use a custom style if the default Blizzard template is missing
+    local checkbutton = CreateFrame('CheckButton', parent:GetName() .. name, parent)
+    checkbutton:SetSize(20, 20)  -- Set appropriate size
+    checkbutton:SetPoint("TOPLEFT", parent, "TOPLEFT", 10, -10)  -- Adjust the position
 
-	return checkbutton
+    -- Create the label for the checkbutton
+    local label = checkbutton:CreateFontString(nil, "OVERLAY", "GameFontNormal")
+    label:SetPoint("LEFT", checkbutton, "RIGHT", 5, 0)
+    label:SetText(name)
+    
+    -- Optional: Add a background or borders for custom styling
+    checkbutton:SetNormalTexture("Interface\\Buttons\\UI-CheckBox-Up")
+    checkbutton:SetPushedTexture("Interface\\Buttons\\UI-CheckBox-Down")
+    checkbutton:SetDisabledCheckedTexture("Interface\\Buttons\\UI-CheckBox-Check-Disabled")
+    checkbutton:SetCheckedTexture("Interface\\Buttons\\UI-CheckBox-Check")
+
+    return checkbutton
 end
 
 local function Warcrafty_CreateSpacer(parent,width)
@@ -48,15 +80,80 @@ local function Warcrafty_CreateSpacer(parent,width)
 	return spacer
 end
 
-local function Warcrafty_CreateTab(parent,name,text)
-	local tab = CreateFrame("Button",parent:GetName()..name,parent,"OptionsFrameTabButtonTemplate")
-	tab:SetText(text)
-	PanelTemplates_TabResize(tab,0)
-	local spacer = Warcrafty_CreateSpacer(tab,(tab:GetWidth()-20))
-	spacer:SetPoint("BOTTOM",tab,"BOTTOM",0,-6)
-	tab.spacer = spacer
-	return tab
+local function Warcrafty_CreateTab(parent, name, text)
+    -- Create the tab button
+    local tab = CreateFrame("Button", parent:GetName()..name, parent, "OptionsFrameTabButtonTemplate")
+    tab:SetText(text)
+
+    -- Ensure the Text field exists for resizing
+    if not tab.Text then
+        tab.Text = tab:CreateFontString(tab:GetName().."Text", "ARTWORK", "GameFontNormal")
+        tab.Text:SetPoint("CENTER", tab)
+        tab.Text:SetText(text)
+    end
+
+    -- Ensure the Left, LeftActive, and other related fields exist for resizing
+    if not tab.Left then
+        tab.Left = tab:CreateTexture(nil, "ARTWORK")
+        tab.Left:SetWidth(10)  -- Adjust width as necessary
+        tab.Left:SetHeight(tab:GetHeight())  -- Full height
+        tab.Left:SetPoint("LEFT", tab, "LEFT", 0, 0)
+    end
+
+    if not tab.LeftActive then
+        tab.LeftActive = tab:CreateTexture(nil, "ARTWORK")
+        tab.LeftActive:SetWidth(10)  -- Adjust width as necessary
+        tab.LeftActive:SetHeight(tab:GetHeight())  -- Full height
+        tab.LeftActive:SetPoint("LEFT", tab, "LEFT", 0, 0)
+    end
+
+    if not tab.Middle then
+        tab.Middle = tab:CreateTexture(nil, "ARTWORK")
+        tab.Middle:SetWidth(tab:GetWidth() - 20)  -- Fill the remaining width
+        tab.Middle:SetHeight(tab:GetHeight())  -- Full height
+        tab.Middle:SetPoint("LEFT", tab, "LEFT", 10, 0)
+        tab.Middle:SetPoint("RIGHT", tab, "RIGHT", -10, 0)
+    end
+
+    if not tab.Right then
+        tab.Right = tab:CreateTexture(nil, "ARTWORK")
+        tab.Right:SetWidth(10)  -- Adjust width as necessary
+        tab.Right:SetHeight(tab:GetHeight())  -- Full height
+        tab.Right:SetPoint("RIGHT", tab, "RIGHT", 0, 0)
+    end
+
+    if not tab.RightActive then
+        tab.RightActive = tab:CreateTexture(nil, "ARTWORK")
+        tab.RightActive:SetWidth(10)  -- Adjust width as necessary
+        tab.RightActive:SetHeight(tab:GetHeight())  -- Full height
+        tab.RightActive:SetPoint("RIGHT", tab, "RIGHT", 0, 0)
+    end
+
+    -- Ensure MiddleActive is initialized properly
+    if not tab.MiddleActive then
+        tab.MiddleActive = tab:CreateTexture(nil, "ARTWORK")
+        tab.MiddleActive:SetWidth(tab:GetWidth() - 20)  -- Fill the remaining width
+        tab.MiddleActive:SetHeight(tab:GetHeight())  -- Full height
+        tab.MiddleActive:SetPoint("LEFT", tab, "LEFT", 10, 0)
+        tab.MiddleActive:SetPoint("RIGHT", tab, "RIGHT", -10, 0)
+    end
+
+    -- Now call PanelTemplates_TabResize, now all required fields should exist
+    PanelTemplates_TabResize(tab, 0)
+
+    -- Add spacer under the tab
+    local spacer = Warcrafty_CreateSpacer(tab, (tab:GetWidth() - 20))
+    spacer:SetPoint("BOTTOM", tab, "BOTTOM", 0, -6)
+    tab.spacer = spacer
+
+    return tab
 end
+
+
+
+
+
+
 
 local function Warcrafty_CreateTab1Page(frame)
 	frame:SetWidth(400)
@@ -421,53 +518,87 @@ local function Warcrafty_CreateTab2Page(frame)
 end
 
 function Warcrafty_AddPanelOptions()
-	local WarcraftyOptions = CreateFrame("Frame","WarcraftyOptions",UIParent)
-	WarcraftyOptions.name = "Warcrafty"
-	
-	local WarcraftyOptionsTab1 = Warcrafty_CreateTab(WarcraftyOptions,"Tab1","Global Settings")
-	WarcraftyOptionsTab1:SetPoint("TOPLEFT",10,-2)
-	local WarcraftyOptionsTab2 = Warcrafty_CreateTab(WarcraftyOptions,"Tab2","Character Settings")
-	WarcraftyOptionsTab2:SetPoint("TOPLEFT",125,-2)
+    local WarcraftyOptions = CreateFrame("Frame", "WarcraftyOptions", UIParent)
+    WarcraftyOptions.name = "Warcrafty"
 
-	local WarcraftyOptionsTab1Page = CreateFrame("Frame","WarcraftyOptionsTab1Page",WarcraftyOptionsTab1)
-	local WarcraftyOptionsTab2Page = CreateFrame("Frame","WarcraftyOptionsTab2Page",WarcraftyOptionsTab2)
+    -- Create tabs
+    local WarcraftyOptionsTab1 = Warcrafty_CreateTab(WarcraftyOptions, "Tab1", "Global Settings")
+    WarcraftyOptionsTab1:SetText("Global Settings")
+	WarcraftyOptionsTab1:SetPoint("TOPLEFT", 10, -2)
+    local WarcraftyOptionsTab2 = Warcrafty_CreateTab(WarcraftyOptions, "Tab2", "Character Settings")
+    WarcraftyOptionsTab1:SetText("Global Settings")
+	WarcraftyOptionsTab2:SetPoint("TOPLEFT", 125, -2)
 
-	Warcrafty_CreateTab1Page(WarcraftyOptionsTab1Page)
-	Warcrafty_CreateTab2Page(WarcraftyOptionsTab2Page)
+    -- Create tab pages
+    local WarcraftyOptionsTab1Page = CreateFrame("Frame", "WarcraftyOptionsTab1Page", WarcraftyOptionsTab1)
+    local WarcraftyOptionsTab2Page = CreateFrame("Frame", "WarcraftyOptionsTab2Page", WarcraftyOptionsTab2)
 
-	local LastTabRightSideSpacer = Warcrafty_CreateSpacer(WarcraftyOptions,160)
-	LastTabRightSideSpacer:SetPoint("LEFT",WarcraftyOptionsTab2,"BOTTOMRIGHT",-10,2)
-	local Tab1Tab2Spacer = Warcrafty_CreateSpacer(WarcraftyOptions,16)
-	Tab1Tab2Spacer:SetPoint("LEFT",WarcraftyOptionsTab1,"BOTTOMRIGHT",-10,2)
-	local LeftSideFirstTabSpacer = Warcrafty_CreateSpacer(WarcraftyOptions,16)
-	LeftSideFirstTabSpacer:SetPoint("RIGHT",WarcraftyOptionsTab1,"BOTTOMLEFT",10,2)
+    Warcrafty_CreateTab1Page(WarcraftyOptionsTab1Page)
+    Warcrafty_CreateTab2Page(WarcraftyOptionsTab2Page)
 
-	PanelTemplates_SetNumTabs(WarcraftyOptions,2)
-	PanelTemplates_SetTab(WarcraftyOptions,WarcraftyOptionsTab1)
-	
-	WarcraftyOptionsTab1:SetScript("OnClick",function()	
-		PanelTemplates_SetTab(WarcraftyOptions, 1); 
-		WarcraftyOptionsTab1.spacer:Hide(); 
-		WarcraftyOptionsTab1Page:Show(); 
-		WarcraftyOptionsTab2Page:Hide(); 
-		WarcraftyOptionsTab2.spacer:Show(); 
-	end)
-	WarcraftyOptionsTab2:SetScript("OnClick",function() 
-		PanelTemplates_SetTab(WarcraftyOptions, 2); 
-		WarcraftyOptionsTab2.spacer:Hide(); 
-		WarcraftyOptionsTab2Page:Show(); 
-		WarcraftyOptionsTab1Page:Hide(); 
-		WarcraftyOptionsTab1.spacer:Show(); 
-	end)
-	WarcraftyOptions:SetScript("OnShow",function() 
-		PanelTemplates_SetTab(WarcraftyOptions, 1); 
-		WarcraftyOptionsTab1.spacer:Hide(); 
-		WarcraftyOptionsTab1Page:Show(); 
-		WarcraftyOptionsTab2Page:Hide(); 
-		WarcraftyOptionsTab2.spacer:Show(); 
-	end)
-	
-	InterfaceOptions_AddCategory(WarcraftyOptions)
+    -- Spacer setups
+    local LastTabRightSideSpacer = Warcrafty_CreateSpacer(WarcraftyOptions, 160)
+    LastTabRightSideSpacer:SetPoint("LEFT", WarcraftyOptionsTab2, "BOTTOMRIGHT", -10, 2)
+    local Tab1Tab2Spacer = Warcrafty_CreateSpacer(WarcraftyOptions, 16)
+    Tab1Tab2Spacer:SetPoint("LEFT", WarcraftyOptionsTab1, "BOTTOMRIGHT", -10, 2)
+    local LeftSideFirstTabSpacer = Warcrafty_CreateSpacer(WarcraftyOptions, 16)
+    LeftSideFirstTabSpacer:SetPoint("RIGHT", WarcraftyOptionsTab1, "BOTTOMLEFT", 10, 2)
+
+    -- Set up tabs and show the correct one
+    PanelTemplates_SetNumTabs(WarcraftyOptions, 2)
+    PanelTemplates_SetTab(WarcraftyOptions, WarcraftyOptionsTab1)
+
+    -- Tab click functions
+    WarcraftyOptionsTab1:SetScript("OnClick", function()    
+        PanelTemplates_SetTab(WarcraftyOptions, 1) 
+        WarcraftyOptionsTab1.spacer:Hide() 
+        WarcraftyOptionsTab1Page:Show() 
+        WarcraftyOptionsTab2Page:Hide() 
+        WarcraftyOptionsTab2.spacer:Show() 
+    end)
+    
+    WarcraftyOptionsTab2:SetScript("OnClick", function() 
+        PanelTemplates_SetTab(WarcraftyOptions, 2) 
+        WarcraftyOptionsTab2.spacer:Hide() 
+        WarcraftyOptionsTab2Page:Show() 
+        WarcraftyOptionsTab1Page:Hide() 
+        WarcraftyOptionsTab1.spacer:Show() 
+    end)
+
+    -- When the options panel is shown
+    WarcraftyOptions:SetScript("OnShow", function() 
+        PanelTemplates_SetTab(WarcraftyOptions, 1) 
+        WarcraftyOptionsTab1.spacer:Hide() 
+        WarcraftyOptionsTab1Page:Show() 
+        WarcraftyOptionsTab2Page:Hide() 
+        WarcraftyOptionsTab2.spacer:Show() 
+    end)
+
+    -- Ensure we add the category only when the addon is fully loaded
+    local function AddToInterfaceOptions()
+        InterfaceOptions_AddCategory(WarcraftyOptions)
+    end
+
+    -- Register the event to ensure the UI has loaded
+    local eventFrame = CreateFrame("Frame")
+    eventFrame:RegisterEvent("ADDON_LOADED")
+    eventFrame:SetScript("OnEvent", function(self, event, arg1)
+        if arg1 == "Warcrafty" then
+            AddToInterfaceOptions()  -- Add the category after addon is fully loaded
+            self:UnregisterEvent("ADDON_LOADED")
+        end
+    end)
+end
+-- Add the Warcrafty options panel to the Interface Options
+local function Warcrafty_AddPanelOptions()
+    local WarcraftyOptions = CreateFrame("Frame", "WarcraftyOptions", UIParent)
+    WarcraftyOptions.name = "Warcrafty"
+
+    -- Create tabs and pages, and set up everything for your panel (same as before)
+    -- (code for creating tabs and pages goes here)
+
+    -- Finally, add the panel to the Interface Options
+    InterfaceOptions_AddCategory(WarcraftyOptions)
 end
 
 function round(num, idp)
